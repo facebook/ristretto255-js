@@ -1,8 +1,8 @@
-var nacl = require('./nacl');
-var lowlevel = nacl.lowlevel;
-
 (function(ristretto) {
   'use strict';
+
+  var nacl = require('./nacl');
+  var lowlevel = nacl.lowlevel;
 
   /*** Important notes:
    *** All encodings are LITTLE-ENDIAN
@@ -373,9 +373,7 @@ var lowlevel = nacl.lowlevel;
     lowlevel.A(f_root_check, vxx, f_root_check); /* vx^2+u*sqrt(-1) */
     has_m_root = iszero25519(m_root_check); /* has_m_root = (vxx == u) */
     has_p_root = iszero25519(p_root_check); /* has_p_root = (vxx == -u) */
-    has_f_root = iszero25519(
-      f_root_check,
-    ); /* has_f_root = (vxx = -u*sqrt(-1)) */
+    has_f_root = iszero25519(f_root_check); /* has_f_root = (vxx = -u*sqrt(-1)) */
     lowlevel.M(x_sqrtm1, x, sqrtm1); /* x*sqrt(-1) */
 
     cmov25519(x, x_sqrtm1, has_p_root | has_f_root);
@@ -579,7 +577,7 @@ var lowlevel = nacl.lowlevel;
     lowlevel.M(
       u,
       u,
-      onemsqd,
+      onemsqd
     ); /* u = (r+1)*(1-d^2) =  (sqrt(-1)*t^2 + 1) * (1-d^2)*/
     lowlevel.set25519(c, lowlevel.gf1); /* c = 1 */
     neg25519(c, c); /* c = -1 */
@@ -672,5 +670,5 @@ var lowlevel = nacl.lowlevel;
 })(
   typeof module !== 'undefined' && module.exports
     ? module.exports
-    : (self.ristretto = self.ristretto || {}),
+    : (self.ristretto = self.ristretto || {})
 );

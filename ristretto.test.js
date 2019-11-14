@@ -1,5 +1,5 @@
-var nacl = require('./nacl');
-var ristretto = require('./ristretto');
+var nacl = require('./nacl.min');
+var ristretto = require('./ristretto.min');
 var lowlevel = nacl.lowlevel;
 
 /***
