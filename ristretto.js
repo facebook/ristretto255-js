@@ -374,7 +374,7 @@ var lowlevel = nacl.lowlevel;
     has_m_root = iszero25519(m_root_check); /* has_m_root = (vxx == u) */
     has_p_root = iszero25519(p_root_check); /* has_p_root = (vxx == -u) */
     has_f_root = iszero25519(
-      f_root_check
+      f_root_check,
     ); /* has_f_root = (vxx = -u*sqrt(-1)) */
     lowlevel.M(x_sqrtm1, x, sqrtm1); /* x*sqrt(-1) */
 
@@ -576,7 +576,11 @@ var lowlevel = nacl.lowlevel;
     lowlevel.S(r, t); /* r = t^2 */
     lowlevel.M(r, sqrtm1, r); /* r = sqrt(-1)*t^2 */
     lowlevel.A(u, r, one); /* u = r+1 = sqrt(-1)*t^2 + 1 */
-    lowlevel.M(u, u, onemsqd); /* u = (r+1)*(1-d^2) =  (sqrt(-1)*t^2 + 1) * (1-d^2)*/
+    lowlevel.M(
+      u,
+      u,
+      onemsqd,
+    ); /* u = (r+1)*(1-d^2) =  (sqrt(-1)*t^2 + 1) * (1-d^2)*/
     lowlevel.set25519(c, lowlevel.gf1); /* c = 1 */
     neg25519(c, c); /* c = -1 */
     lowlevel.A(rpd, r, lowlevel.D); /* rpd = r*d */
@@ -665,4 +669,8 @@ var lowlevel = nacl.lowlevel;
   ristretto.MmodL = MmodL;
   ristretto.ristretto255_frombytes = ristretto255_frombytes;
   ristretto.scalarmodL1 = scalarmodL1;
-})(typeof module !== 'undefined' && module.exports ? module.exports : (self.ristretto = self.ristretto || {}));
+})(
+  typeof module !== 'undefined' && module.exports
+    ? module.exports
+    : (self.ristretto = self.ristretto || {}),
+);
