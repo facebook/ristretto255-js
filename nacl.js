@@ -919,31 +919,21 @@ nacl.lowlevel = {
 
   /* Exposing low-level functions for Ristretto */
   gf: gf,
-  gf0: gf0,
-  gf1: gf1,
-  _121665: _121665,
   D: D,
-  D2: D2,
-  X: X,
-  Y: Y,
-  I: I,
-  car25519: car25519,
   pack25519: pack25519,
   unpack25519: unpack25519,
   M: M,
   A: A,
   S: S,
   Z: Z,
-  inv25519: inv25519,
   pow2523: pow2523,
   add: add,
   set25519: set25519,
-  sel25519: sel25519,
-  cswap: cswap,
-  scalarmult: scalarmult,
-  L: L,
   modL: modL,
-  scalarbase: scalarbase
+
+  /* Functions exposed for tests */
+  scalarmult: scalarmult,
+  scalarbase: scalarbase,
 };
 
 /* High-level API */

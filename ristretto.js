@@ -4,6 +4,8 @@
   var nacl = require('./nacl');
   var lowlevel = nacl.lowlevel;
 
+  var gf1 = lowlevel.gf([1]);
+
   /*** Important notes:
    *** All encodings are LITTLE-ENDIAN
    ***/
@@ -304,7 +306,7 @@
    * @param {Float64Array(16)} h = (-f) - the output field element (mod 2^255 - 19).
    */
   function neg25519(h, f) {
-    lowlevel.Z(h, lowlevel.gf0, f);
+    lowlevel.Z(h, lowlevel.gf(), f);
   }
 
   /**
@@ -423,8 +425,7 @@
     lowlevel.S(u1_u2u2, u2); /* u1_u2u2 = u2^2 */
     lowlevel.M(u1_u2u2, u1, u1_u2u2); /* u1_u2u2 = u1*u2^2 */
 
-    one = lowlevel.gf1;
-    ristretto255_sqrt_ratio_m1(inv_sqrt, one, u1_u2u2);
+    ristretto255_sqrt_ratio_m1(inv_sqrt, gf1, u1_u2u2);
 
     lowlevel.M(den1, inv_sqrt, u1); /* den1 = inv_sqrt*u1 */
     lowlevel.M(den2, inv_sqrt, u2); /* den2 = inv_sqrt*u2 */
@@ -514,11 +515,11 @@
     lowlevel.unpack25519(s_, s);
     lowlevel.S(ss, s_); /* ss = s^2 */
 
-    lowlevel.set25519(u1, lowlevel.gf1); /* u1 = 1 */
+    lowlevel.set25519(u1, gf1); /* u1 = 1 */
     lowlevel.Z(u1, u1, ss); /* u1 = 1-ss */
     lowlevel.S(u1u1, u1); /* u1u1 = u1^2 */
 
-    lowlevel.set25519(u2, lowlevel.gf1); /* u2 = 1 */
+    lowlevel.set25519(u2, gf1); /* u2 = 1 */
     lowlevel.A(u2, u2, ss); /* u2 = 1+ss */
     lowlevel.S(u2u2, u2); /* u2u2 = u2^2 */
 
@@ -528,7 +529,7 @@
 
     lowlevel.M(v_u2u2, v, u2u2); /* v_u2u2 = v*u2^2 */
 
-    lowlevel.set25519(one, lowlevel.gf1); /* one = 1 */
+    lowlevel.set25519(one, gf1); /* one = 1 */
     was_square = ristretto255_sqrt_ratio_m1(inv_sqrt, one, v_u2u2);
     lowlevel.M(h[0], inv_sqrt, u2);
     lowlevel.M(h[1], inv_sqrt, h[0]);
@@ -538,7 +539,7 @@
     lowlevel.A(h[0], h[0], h[0]);
     abs25519(h[0], h[0]);
     lowlevel.M(h[1], u1, h[1]);
-    lowlevel.set25519(h[2], lowlevel.gf1); /* h->Z = 1 */
+    lowlevel.set25519(h[2], gf1); /* h->Z = 1 */
     lowlevel.M(h[3], h[0], h[1]);
 
     return -((1 - was_square) | isneg25519(h[3]) | iszero25519(h[1]));
@@ -570,7 +571,7 @@
       w3 = lowlevel.gf();
     var wasnt_square;
 
-    lowlevel.set25519(one, lowlevel.gf1); /* one = 1 */
+    lowlevel.set25519(one, gf1); /* one = 1 */
     lowlevel.S(r, t); /* r = t^2 */
     lowlevel.M(r, sqrtm1, r); /* r = sqrt(-1)*t^2 */
     lowlevel.A(u, r, one); /* u = r+1 = sqrt(-1)*t^2 + 1 */
@@ -579,7 +580,7 @@
       u,
       onemsqd
     ); /* u = (r+1)*(1-d^2) =  (sqrt(-1)*t^2 + 1) * (1-d^2)*/
-    lowlevel.set25519(c, lowlevel.gf1); /* c = 1 */
+    lowlevel.set25519(c, gf1); /* c = 1 */
     neg25519(c, c); /* c = -1 */
     lowlevel.A(rpd, r, lowlevel.D); /* rpd = r*d */
     lowlevel.M(v, r, lowlevel.D); /* v = r*d */
