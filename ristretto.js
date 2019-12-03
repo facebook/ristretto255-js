@@ -15,7 +15,6 @@
    *** The order of the curve is a prime L = 2^252 + 27742317777372353535851937790883648493, the part being added is 125 bits long.
    *** Constant L is defined in nacl.js.
    *** The function modL() is defined in nacl.js and reduces an element mod L.
-   *** TODO: figure out the requirements on the input for the modL function to not have any overflows: it should just be that the elements are at most 16 bits...
    ***/
 
   /* L - 2 = 2^252 + 27742317777372353535851937790883648491 required to compute the inverse */
@@ -83,16 +82,41 @@
     for (i = 0; i < 64; i++) t[i] = 0;
 
     // Simple "operand scanning" schoolbook multiplication in two nested loops.
-    // Elements of t are 21 = (8 + 8 + log(32)) bits integers
+    // Elements of the resulting t have the max number of bits represented by this 64-elements vector:
+    // [16, 17, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20, 20, 20, 20, 20, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 20, 20, 20, 20, 20, 20, 20, 20, 19, 19, 19, 19, 18, 18, 17, 16, 0]
     for (i = 0; i < 32; i++) {
       for (j = 0; j < 32; j++) {
         t[i + j] += a[i] * b[j];
       }
     }
 
-    // To reduce elements of t to be less than 16 bits each, we propagate the carry of 5 bits to the most significant bits,
-    // resulting in at most 6 bits carry being added to t[63].
-    // Note that t[63] is at most 1 (TODO: double check), so the addition of the 6-bits carry will not overflow.
+    // To reduce elements of t to be less than 8 bits, we propagate the carry above 8 bits to the most significant bits,
+    // The following python simulation of the process shows that in result of this operation all the elements will be of less than 8 bits
+    // with no overflows
+    // #               [0,             1,                  ..., 31,         32,         ..., 62,     63]
+    // # upperbounds = [255*255=65025, 255*255*2 = 130050, ..., 255*255*32, 255*255*31, ..., 255*255, 0]
+    //
+    // upperbounds = []
+    // i = 0
+    // while i <= 31:
+    //   upperbounds.append(255*255*(i+1))
+    //   i += 1
+    // while i <= 62:
+    //   upperbounds.append(255*255*(63 - i))
+    //   i += 1
+    // upperbounds.append(0)
+    //
+    // # simulating the reduction
+    // i = 1
+    // while i < 64:
+    //     # check that addition does not overflows: the result will always be at most 22 bits
+    //     assert upperbounds[i].bit_length() <= 21
+    //     assert (upperbounds[i-1] >> 8).bit_length() <= 21
+    //    upperbounds[i] += upperbounds[i-1] >> 8
+    //    i += 1
+    //
+    // # the carry in the 63-rd element is at most 255, so exactly 8 bits:
+    // print("the highest carry is {}".format(upperbounds[63]))      
     var carry = 0;
     for (j = 0; j < 64; j++) {
       t[j] += carry;
