@@ -5,6 +5,10 @@ var lowlevel = nacl.lowlevel;
 /***
  *** Tests
  ***/
+
+// Copied here not to expose L from lowlevel solely for the testing purposes
+var L = new Float64Array([0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10]);
+
 /* Helper functions */
 /* Padding the string s to size with leading zeroes, returns resulting string */
 function pad(s, size) {
@@ -62,8 +66,9 @@ var encodings_of_small_multiples = [
 ];
 
 var p = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+var q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
 
-test('Checking encodings of small multiples', () => {
+test('Ristretto official: Checking encodings of small multiples', () => {
   for (i = 0; i < 16; i++) {
     lowlevel.scalarbase(p, lowlevel.gf([i]));
     var res = byteArrayToHex(ristretto.ristretto255_tobytes(p));
@@ -109,7 +114,7 @@ var bad_encodings = [
 ];
 
 /* Testing for bad encodings */
-test('Checking bad encodings', () => {
+test('Ristretto official: Checking bad encodings', () => {
   for (i = 0; i < bad_encodings.length; i++) {
     var res = ristretto.ristretto255_frombytes(
       p,
@@ -120,7 +125,7 @@ test('Checking bad encodings', () => {
 });
 
 /* Testing for good encodings: using the small multiples of the base point */
-test('Checking good encodings', () => {
+test('Ristretto official: Checking good encodings', () => {
   for (i = 0; i < encodings_of_small_multiples.length; i++) {
     var res = ristretto.ristretto255_frombytes(
       p,
@@ -140,6 +145,16 @@ var labels = [
   'and is not a Ristretto as some believe.',
 ];
 
+var intermediate_hash = [
+    "5d1be09e3d0c82fc538112490e35701979d99e06ca3e2b5b54bffe8b4dc772c14d98b696a1bbfb5ca32c436cc61c16563790306c79eaca7705668b47dffe5bb6",
+    "f116b34b8f17ceb56e8732a60d913dd10cce47a6d53bee9204be8b44f6678b270102a56902e2488c46120e9276cfe54638286b9e4b3cdb470b542d46c2068d38",
+    "8422e1bbdaab52938b81fd602effb6f89110e1e57208ad12d9ad767e2e25510c27140775f9337088b982d83d7fcf0b2fa1edffe51952cbe7365e95c86eaf325c",
+    "ac22415129b61427bf464e17baee8db65940c233b98afce8d17c57beeb7876c2150d15af1cb1fb824bbd14955f2b57d08d388aab431a391cfc33d5bafb5dbbaf",
+    "165d697a1ef3d5cf3c38565beefcf88c0f282b8e7dbd28544c483432f1cec7675debea8ebb4e5fe7d6f6e5db15f15587ac4d4d4a1de7191e0c1ca6664abcc413",
+    "a836e6c9a9ca9f1e8d486273ad56a78c70cf18f0ce10abb1c7172ddd605d7fd2979854f47ae1ccf204a33102095b4200e5befc0465accc263175485f0e17ea5c",
+    "2cdc11eaeb95daf01189417cdddbf95952993aa9cb9c640eb5058d09702c74622c9965a697a3b345ec24ee56335b556e677b30e6f90ac77d781064f866a3c982",
+];
+
 var encoded_hash_to_points = [
   '3066f82a1a747d45120d1740f14358531a8f04bbffe6a819f86dfe50f44a0a46',
   'f26e5b6f7d362d2d2a94c5d0e7602cb4773c95a2e5c31a64f133189fa76ed61b',
@@ -152,12 +167,13 @@ var encoded_hash_to_points = [
 
 const crypto = require('crypto');
 
-test('Checking hash-to-point', () => {
+test('Ristretto official: Checking hash-to-point', () => {
   for (i = 0; i < 7; i++) {
     var h = crypto
       .createHash('sha512')
       .update(labels[i])
-      .digest();
+	.digest();
+    expect(byteArrayToHex(h)).toBe(intermediate_hash[i]);
     var res = byteArrayToHex(
       ristretto.ristretto255_tobytes(ristretto.ristretto255_from_hash(h)),
     );
@@ -244,14 +260,98 @@ test('Checking PAKE', () => {
   }
 });
 
-/* Testing for mod reductions */
-test('Checking mod reductions', () => {
-    
-  for (i = 0; i < bad_encodings.length; i++) {
+/**
+ * Checking if the input array of bytes represents a valid ristretto point
+ * NB: Defining for convenience though the function can make it upstream
+ *
+ * @param {Uint8Array(32)} s byte array - the string representing a ristretto point serialized
+ * @return {int} 1 on success, 0 on failure.
+ */
+function ristretto255_is_valid_point(p) {
+    var rp = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
     var res = ristretto.ristretto255_frombytes(
-      p,
-      hexToByteArray(bad_encodings[i]),
+	rp,
+	p,
     );
-    expect(res).toBe(-1);
-  }
+    if (res != 0) {
+	return 0;
+    }
+    return 1;
+}
+
+/**
+ * Generating a random scalar: a random number in the interval [0, L)
+ * NB: Defining for convenience though the function can make it upstream
+ *
+ * @param {Uint8Array(32)} s byte array - the string representing a ristretto point serialized
+ * @return {int} 1 on success, 0 on failure.
+ */
+function ed25519_random_scalar() {
+    // This is in fact ed25519_scalar_random
+    var r;
+    do {
+	r = crypto.randomBytes(32);
+        r[31] &= 0x1f;
+
+	// constant-time check for r < L, if so c != 0
+	var i = 32;
+	var n = 1;
+	var c = 0;
+	do {
+            i--;
+            c |= ((r[i] - L[i]) >> 8) & n;
+            n &= ((r[i] ^ L[i]) - 1) >> 8;
+	} while (i != 0);
+
+    } while (c == 0);
+
+    return r;
+}
+
+/**
+ * Multiplying the base point by a scalar and serializing to ristretto point
+ * NB: Defining for convenience though the function can make it upstream
+ *
+ * @param {Uint8Array(32)} r byte array - the scalar in [0, L)
+ * @return {Uint8Array(32)} serialized ristretto point r * BASE
+ */
+/*
+function ristretto255_scalar_mult_base(r) {
+    var p = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+    lowlevel.scalarbase(p, r);
+    return ristretto.ristretto255_tobytes(q);    
+}
+*/
+
+/**
+ * Generating a random ristretto point
+ * NB: Defining for convenience though the function can make it upstream
+ *
+ * @param none
+ * @return {[Float64Array(16), Float64Array(16), Float64Array(16), Float64Array(16)]} The resulting Ed25519 elliptic-curve point.
+ */
+function ristretto255_random() {
+    // create a random hash string
+    var h = crypto.randomBytes(64);
+    return ristretto.ristretto255_from_hash(h);
+}
+
+// Porting libsodium test tv3 https://github.com/jedisct1/libsodium/blob/master/test/default/core_ristretto255.c#L110
+test('Fuzzy checking ristretto ops', () => {
+    for (i = 0; i < 100; i++) {
+	// check random multiples of the base point are valid ristretto points
+	var random_scalar = ed25519_random_scalar();
+	var ristretto_point = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+	lowlevel.scalarbase(ristretto_point, random_scalar);
+	var serialized_ristretto_point = ristretto.ristretto255_tobytes(ristretto_point);
+	expect(ristretto255_is_valid_point(serialized_ristretto_point)).toBe(1);
+
+	// check random ristretto points are valid
+	ristretto_point = ristretto255_random();
+	serialized_ristretto_point = ristretto.ristretto255_tobytes(ristretto_point);
+	expect(ristretto255_is_valid_point(serialized_ristretto_point)).toBe(1);
+
+	// check that multiplying a random point by L gives zero
+	// ...
+    }
 });

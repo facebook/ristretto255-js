@@ -488,6 +488,7 @@
    * b) s < p : either the most significant bit is 0 (s[31] & 0xc0 == 0)
    * c) s is nonnegative <=> (s[0] & 1) == 0
    * The field modulus is 2^255 - 19 which is in binary 0111 1111 ... all ones ... 1110 1101 = 0x7f 0xff ... 0xff ... 0xff 0xed
+   * NB: Note that a canonical ristretto point is not guaranted be valid (i.e. ristretto255_frombytes may still fail).
    *
    * @param {Uint8Array(32)} s byte array - the result of the serialization.
    *
