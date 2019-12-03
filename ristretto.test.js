@@ -243,3 +243,15 @@ test('Checking PAKE', () => {
     expect(h5.toString('base64')).toBe(HmHmsalt[i]);
   }
 });
+
+/* Testing for mod reductions */
+test('Checking mod reductions', () => {
+    
+  for (i = 0; i < bad_encodings.length; i++) {
+    var res = ristretto.ristretto255_frombytes(
+      p,
+      hexToByteArray(bad_encodings[i]),
+    );
+    expect(res).toBe(-1);
+  }
+});
