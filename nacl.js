@@ -920,6 +920,7 @@ nacl.lowlevel = {
   /* Exposing low-level functions for Ristretto */
   gf: gf,
   D: D,
+  L: L,
   pack25519: pack25519,
   unpack25519: unpack25519,
   M: M,

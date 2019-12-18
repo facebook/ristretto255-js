@@ -1,6 +1,9 @@
 (function(ristretto) {
   'use strict';
 
+  // TODO: find a workaround, crypto may not be supported
+  var crypto = require('crypto');
+    
   var nacl = require('./nacl');
   var lowlevel = nacl.lowlevel;
 
@@ -54,21 +57,6 @@
     0,
     0x10,
   ]);
-
-  /**
-   * Function scalarmodL creates an array of 32 element Float64Array(32) for representing points mod L
-   */
-  var scalarmodL = function(init) {
-    var i,
-      r = new Float64Array(32);
-    if (init) for (i = 0; i < init.length; i++) r[i] = init[i];
-    return r;
-  };
-
-  /**
-   * Constant scalars of type Float64Array(32)
-   */
-  var scalarmodL1 = scalarmodL([1]);
 
   /**
    * Multiplication of two scalars: school-book multiplication.
@@ -490,7 +478,7 @@
    * b) s < p : either the most significant bit is 0 (s[31] & 0xc0 == 0)
    * c) s is nonnegative <=> (s[0] & 1) == 0
    * The field modulus is 2^255 - 19 which is in binary 0111 1111 ... all ones ... 1110 1101 = 0x7f 0xff ... 0xff ... 0xff 0xed
-   * NB: Note that a canonical ristretto point is not guaranted be valid (i.e. ristretto255_frombytes may still fail).
+   * NB: Note that a canonical ristretto point is not guaranted to be valid (i.e. ristretto255_frombytes may still fail). Valid points are those for which ristretto255_frombytes succeeds.
    *
    * @param {Uint8Array(32)} s byte array - the result of the serialization.
    *
@@ -689,14 +677,301 @@
     return p0;
   }
 
-  ristretto.ristretto255_from_hash = ristretto255_from_hash;
-  ristretto.ristretto255_tobytes = ristretto255_tobytes;
-  ristretto.scalarmodL = scalarmodL;
-  ristretto.invmodL = invmodL;
-  ristretto.MmodL = MmodL;
-  ristretto.ristretto255_frombytes = ristretto255_frombytes;
-  ristretto.scalarmodL1 = scalarmodL1;
-  ristretto.neg25519 = neg25519;
+    /***
+     *** High-level ristretto functions that only operate on serialized ristretto points (may drop them for a more compact javascript file).
+     *** Note: if the inputs to the functions are not valid (as per spec), the function's behaviour is undefined, it can crash or throw an error.
+     ***/
+
+    /**
+     * Multiply base point by scalar
+     *
+     * @param {Float64Array(32)} n - scalar mod L
+     * @return {Uint8Array(32)} serialized ristretto point
+     */
+    function crypto_scalarmult_ristretto255_base(n) {
+	var Q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+	// TODO: do we really need to erase the most significant bit as below?
+	/*
+	  var t = new Uint8Array(32);
+	  var i;
+	  for (i = 0; i < 32; i++) {
+	  t[i] = n[i];
+	  }
+	  t[31] &= 127;
+	*/
+
+	lowlevel.scalarbase(Q, n); // Q = BASE * n
+	return ristretto255_tobytes(Q);
+    }
+
+    /**
+     * Multiply given point by scalar
+     *
+     * @param {Float64Array(32)} n - scalar mod L
+     * @param {Uint8Array(32)} p - serialized ristretto point
+     * @return {Uint8Array(32)} serialized ristretto point (p * n)
+     */
+    function crypto_scalarmult_ristretto255(n, p) {
+	var Q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+	var P = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+	
+	if (ristretto255_frombytes(P, p) != 0) {
+	    throw "Invalid argument";
+	}
+	// TODO: do we need to crop the scalar n[31] &= 127 ?
+	lowlevel.scalarmult(Q, P, n); // Q = P * n
+	return ristretto255_tobytes(Q);
+    }
+
+    /**
+     * Checking if the input array of bytes represents a serialization of a ristretto point
+     *
+     * @param {Uint8Array(32)} p byte array
+     * @return {int} 1 on success, 0 on failure.
+     */
+    function crypto_core_ristretto255_is_valid_point(p) {    
+	var P = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+	if (ristretto255_frombytes(P, p) == -1) {
+	    return 0;
+	}
+	return 1;
+    }
+
+    /**
+     * Adding two ristretto points
+     *
+     * @param {Uint8Array(32)} p byte array - serialized ristretto point
+     * @param {Uint8Array(32)} q byte array - serialized ristretto point
+     * @return {Uint8Array(32)} serialized ristretto point (p+q)
+     */
+    function crypto_core_ristretto255_add(p, q) {
+	var P = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+	var Q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+
+	if (ristretto255_frombytes(P, p) == -1) {
+	    throw "Invalid argument";
+	}
+	if (ristretto255_frombytes(Q, q) == -1) {
+	    throw "Invalid argument";
+	}
+
+	var R = [P[0], P[1], P[2], P[3]];
+	lowlevel.add(R, Q); // R = P + Q
+	return ristretto255_tobytes(R);
+    }
+
+    // Subtracting two ed25519 points - this function is symmetrical to lowlevel.add
+    // P := P - Q
+    function sub(P, Q) {
+	// negate Q: -(x,y,z,t) = (-x, y, z, -t)
+	var negQ3 = lowlevel.gf();
+	neg25519(negQ3, Q[3]);
+	var negQ0 = lowlevel.gf();
+	neg25519(negQ0, Q[0]);
+	var negQ = [negQ0, Q[1], Q[2], negQ3];
+	lowlevel.add(P, negQ);    
+    }
+
+    /**
+     * Subtracting two ristretto points
+     *
+     * @param {Uint8Array(32)} p byte array - serialized ristretto point
+     * @param {Uint8Array(32)} q byte array - serialized ristretto point
+     * @return {Uint8Array(32)} serialized ristretto point (p-q)
+     */
+    function crypto_core_ristretto255_sub(p, q) {
+	var P = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+	var Q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+
+	if (ristretto255_frombytes(P, p) == -1) {
+	    throw "Invalid argument";
+	}
+	if (ristretto255_frombytes(Q, q) == -1) {
+	    throw "Invalid argument";
+	}
+
+	var R = [P[0], P[1], P[2], P[3]];
+	sub(R, Q); // R = P - Q
+	return ristretto255_tobytes(R);
+    }
+
+    /**
+     * Generating a random ristretto point
+     * NB: Defining for convenience though the function can make it upstream
+     *
+     * @param none
+     * @return {[Float64Array(16), Float64Array(16), Float64Array(16), Float64Array(16)]} The resulting Ed25519 elliptic-curve point.
+     */
+    function ristretto255_random() {
+	// create a random hash string
+	var h = crypto.randomBytes(64);
+	return ristretto255_from_hash(h);
+    }
+
+    /**
+     * Creating and serializing a ristretto point from a hash
+     *
+     * @param {Uint8Array(64)} h 64 elements byte array such as the output of SHA512.
+     * @return {Uint8Array(32)} serialized ristretto point
+     */
+    function crypto_core_ristretto255_from_hash(h) {
+	return ristretto255_tobytes(ristretto255_from_hash(h));
+    }
+
+    /**
+     * Generating a random serialized ristretto point
+     *
+     * @param none
+     * @return {Uint8Array(32)} serialized random ristretto point
+     */
+    function crypto_core_ristretto255_random() {
+	return ristretto255_tobytes(ristretto255_random())
+    }
+
+    /**
+     * Generating a random scalar mod L via rejection sampling
+     *
+     * @return {Float64Array(32)} scalar mod L
+     */
+    function crypto_core_ristretto255_scalar_random() {
+	var r;
+	// rejection sampling loop with constant-time body
+	do {
+	    r = crypto.randomBytes(32);
+            r[31] &= 0x1f;
+
+	    // constant-time check for r < L, if so break and return r
+	    var i = 32;
+	    var n = 1;
+	    var c = 0;
+	    do {
+		i--;
+		c |= ((r[i] - lowlevel.L[i]) >> 8) & n;
+		n &= ((r[i] ^ lowlevel.L[i]) - 1) >> 8;
+	    } while (i != 0);
+
+	} while (c == 0);
+
+	var res = new Float64Array(32);
+	// converting from Buffer to the correct type to avoid confusion
+	for (i = 0; i < 32; i++) res[i] = r[i];
+	return res;
+    }
+
+    /**
+     * Inverting scalar modL
+     *
+     * @param {Float64Array(32)} s - scalar mod L to invert
+     * @return {Float64Array(32)} inverted scalar 1/s
+     */
+    function crypto_core_ristretto255_scalar_invert(s) {
+	var res = new Float64Array(32);
+	invmodL(res, s);
+	return res;
+    }
+
+    // TODO: crypto_core_ristretto255_scalar_negate and crypto_core_ristretto255_scalar_sub need some double-checking - not sure modL works well with vectors having negative components
+    
+    /**
+     * Adding a scalar modL
+     *
+     * @param {Float64Array(32)} s - scalar mod L
+     * @return {Float64Array(32)} -s mod L
+     */
+    function crypto_core_ristretto255_scalar_negate(s) {
+	var neg_s = new Float64Array(32);
+	var res = new Float64Array(32);
+	var i;
+	for (i = 0; i < 32; i++) {
+	    neg_s[i] = -s[i];
+	}
+	lowlevel.modL(res, neg_s);
+	return res;
+    }
+
+    /**
+     * Adding two scalars modL
+     *
+     * @param {Float64Array(32)} x - scalar mod L
+     * @param {Float64Array(32)} y - scalar mod L
+     * @return {Float64Array(32)} x + y mod L
+     */
+    function crypto_core_ristretto255_scalar_add(x, y) {
+	var z = new Float64Array(32);
+	var res = new Float64Array(32);
+	var i;
+	for (i = 0; i < 32; i++) {
+	    z[i] = x[i] + y[i];
+	}
+	lowlevel.modL(res, z);
+	return res;
+    }
+
+    /**
+     * Subtracting two scalars modL
+     *
+     * @param {Float64Array(32)} x - scalar mod L
+     * @param {Float64Array(32)} y - scalar mod L
+     * @return {Float64Array(32)} x - y mod L
+     */
+    function crypto_core_ristretto255_scalar_sub(x, y) {
+	var z = new Float64Array(32);
+	var res = new Float64Array(32);
+	var i;
+	for (i = 0; i < 32; i++) {
+	    z[i] = x[i] - y[i];
+	}
+	lowlevel.modL(res, z);
+	return res;
+    }
+
+    /**
+     * Multiplying two scalars modL.
+     *
+     * @param {Float64Array(32)} x - scalar mod L
+     * @param {Float64Array(32)} y - scalar mod L
+     * @return {Float64Array(32)} (x * y) mod L
+     */
+    function crypto_core_ristretto255_scalar_mul(x, y) {
+	var res = new Float64Array(32);
+	MmodL(res, x, y);
+	return res;
+    }
+
+    // constants: perhaps we do not need them
+    // var crypto_core_ristretto255_HASHBYTES = 64
+    // var crypto_core_ristretto255_BYTES = 32
+    // var crypto_core_ristretto255_SCALARBYTES = 32
+    // var crypto_core_ristretto255_NONREDUCEDSCALARBYTES = 64
+  
+
+    /* High-level functions for safety */
+    ristretto.crypto_scalarmult_ristretto255_base = crypto_scalarmult_ristretto255_base;
+    ristretto.crypto_scalarmult_ristretto255 = crypto_scalarmult_ristretto255;
+    ristretto.crypto_core_ristretto255_is_valid_point = crypto_core_ristretto255_is_valid_point;
+    ristretto.crypto_core_ristretto255_add = crypto_core_ristretto255_add;
+    ristretto.crypto_core_ristretto255_sub = crypto_core_ristretto255_sub;
+    ristretto.crypto_core_ristretto255_from_hash = crypto_core_ristretto255_from_hash;
+    ristretto.crypto_core_ristretto255_random = crypto_core_ristretto255_random;
+    ristretto.crypto_core_ristretto255_scalar_random = crypto_core_ristretto255_scalar_random;
+    ristretto.crypto_core_ristretto255_scalar_invert = crypto_core_ristretto255_scalar_invert;
+    ristretto.crypto_core_ristretto255_scalar_negate = crypto_core_ristretto255_scalar_negate;
+    ristretto.crypto_core_ristretto255_scalar_add = crypto_core_ristretto255_scalar_add;
+    ristretto.crypto_core_ristretto255_scalar_sub = crypto_core_ristretto255_scalar_sub;
+    ristretto.crypto_core_ristretto255_scalar_mul = crypto_core_ristretto255_scalar_mul;
+
+    /* Low-level functions for efficient protocols */
+    ristretto.ristretto255_from_hash = ristretto255_from_hash;
+    ristretto.ristretto255_tobytes = ristretto255_tobytes;
+    ristretto.ristretto255_frombytes = ristretto255_frombytes;
+    ristretto.sub = sub
+    ristretto.ristretto255_random = ristretto255_random;
+    
+    // ristretto.scalarmodL = scalarmodL;
+    // ristretto.invmodL = invmodL;
+    // ristretto.MmodL = MmodL;
+    // ristretto.scalarmodL1 = scalarmodL1;
+    // ristretto.neg25519 = neg25519;
 })(
   typeof module !== 'undefined' && module.exports
     ? module.exports
