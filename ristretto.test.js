@@ -460,7 +460,7 @@ function crypto_core_ristretto255_scalar_random() {
  */
 function crypto_core_ristretto255_scalar_invert(s) {
     var res = new Float64Array(32);
-    inv25519(res, s);
+    ristretto.invmodL(res, s);
     return res;
 }
 
@@ -520,17 +520,127 @@ function test_is_zero_array(arr) {
 // Porting libsodium test tv3 https://github.com/jedisct1/libsodium/blob/master/test/default/core_ristretto255.c#L110
 test('Fuzzy checking ristretto ops', () => {
     for (i = 0; i < 100; i++) {
-	// check ristretto255_scalarmult: random multiples of the base point are valid ristretto points
+	// s := random_scalar * BASE
         var r = crypto_core_ristretto255_scalar_random();
 	var s = crypto_scalarmult_ristretto255_base(r);
+	// test s is valid
 	expect(crypto_core_ristretto255_is_valid_point(s)).toBe(1);
 	
-	// check random ristretto points are valid
+	// s := random
         s = crypto_core_ristretto255_random();
+	// test s is valid
 	expect(crypto_core_ristretto255_is_valid_point(s)).toBe(1);
 
-	// check that multiplying a random point by L gives zero
+	// s := s * L
         s = crypto_scalarmult_ristretto255(L, s);
+	// test s == 0
 	expect(test_is_zero_array(s)).toBe(1);
+
+	// crypto_core_ristretto255_HASHBYTES = 64
+	// crypto_core_ristretto255_BYTES = 32
+	// crypto_core_ristretto255_SCALARBYTES = 32
+	// crypto_core_ristretto255_NONREDUCEDSCALARBYTES = 64 - why we even need non-reduced scalars?
+
+	// s := from hash h
+	var h = crypto.randomBytes(64);
+	s = crypto_core_ristretto255_from_hash(h);
+	// test s is valid
+	expect(crypto_core_ristretto255_is_valid_point(s)).toBe(1);
+
+	// s := s * L
+        s = crypto_scalarmult_ristretto255(L, s);
+	// test s == 0
+	expect(test_is_zero_array(s)).toBe(1);
+
+	// s2 := s * r
+	var s2 = crypto_scalarmult_ristretto255(r, s);
+	// test s2 is valid
+	expect(crypto_core_ristretto255_is_valid_point(s2)).toBe(1);
+
+	// s_ := s2 * (1/r)
+        var r_inv = crypto_core_ristretto255_scalar_invert(r);
+	var s_ = crypto_scalarmult_ristretto255(r_inv, s2);
+	// test s_ is valid
+	expect(crypto_core_ristretto255_is_valid_point(s_)).toBe(1);
+
+	// test s_ == s
+	// both s_ and s are of type Uint8Array(32)
+	var j;
+	for (j = 0; j < 32; j++) {
+	    expect(s_[j]).toBe(s[j]);
+	}
+
+	// s2 := s2 * L
+        s2 = crypto_scalarmult_ristretto255(L, s2);
+	// test s2 == 0
+	expect(test_is_zero_array(s2)).toBe(1);
+
+	// s2 := s + s
+	s2 = crypto_core_ristretto255_add(s, s_);
+	// test s2 is valid
+	expect(crypto_core_ristretto255_is_valid_point(s2)).toBe(1);	
+	// s2 := s2 - s
+        s2 = crypto_core_ristretto255_sub(s2, s_);
+	// test s2 is valid
+	expect(crypto_core_ristretto255_is_valid_point(s2)).toBe(1);	
+	// test s2 == s
+	for (j = 0; j < 32; j++) {
+	    expect(s2[j]).toBe(s[j]);
+	}
+
+	// s2 := s2 - s
+        s2 = crypto_core_ristretto255_sub(s2, s_);
+	// test s2 is valid
+	expect(crypto_core_ristretto255_is_valid_point(s2)).toBe(1);	
+	// test s2 == 0
+	expect(test_is_zero_array(s2)).toBe(1);
+
+	s = crypto_core_ristretto255_random();
+	s_ = new Uint8Array([
+	    0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe,
+	    0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe,
+	    0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe,
+	    0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe
+	]);
+	// test s_ is invalid
+	expect(crypto_core_ristretto255_is_valid_point(s_)).toBe(0);
+
+	// add should throw an exception on invalid inputs
+	try {
+	    crypto_core_ristretto255_add(s_, s);
+	    expect(0).toBe(1);
+	} catch (err) {}
+	try {
+	    crypto_core_ristretto255_add(s, s_);
+	    expect(0).toBe(1);
+	} catch (err) {}
+	try {
+	    crypto_core_ristretto255_add(s_, s_);
+	    expect(0).toBe(1);
+	} catch (err) {}
+	try {
+	    s2 = crypto_core_ristretto255_add(s, s);
+	} catch (err) {
+	    expect(0).toBe(1);
+	}
+	
+	// sub should throw an exception on invalid inputs
+	try {
+	    crypto_core_ristretto255_sub(s_, s);
+	    expect(0).toBe(1);
+	} catch (err) {}
+	try {
+	    crypto_core_ristretto255_sub(s, s_);
+	    expect(0).toBe(1);
+	} catch (err) {}
+	try {
+	    crypto_core_ristretto255_sub(s_, s_);
+	    expect(0).toBe(1);
+	} catch (err) {}
+	try {
+	    s2 = crypto_core_ristretto255_sub(s, s);
+	} catch (err) {
+	    expect(0).toBe(1);
+	}
     }
 });
