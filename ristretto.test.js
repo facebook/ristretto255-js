@@ -464,24 +464,57 @@ function crypto_core_ristretto255_scalar_invert(s) {
     return res;
 }
 
-function crypto_core_ristretto255_scalar_negate(neg, s) {
-    throw "Undefined";
-    // ed25519_scalar_negate(neg, s);
+/**
+ * Adding a scalar modL
+ *
+ * @param {Float64Array(32)} s - scalar mod L
+ * @return {Float64Array(32)} -s mod L
+ */
+function crypto_core_ristretto255_scalar_negate(s) {
+    var neg_s = new Float64Array(32);
+    var res = new Float64Array(32);
+    var i;
+    for (i = 0; i < 32; i++) {
+	neg_s[i] = -s[i];
+    }
+    lowlevel.modL(res, neg_s);
+    return res;
 }
 
-function crypto_core_ristretto255_scalar_complement(comp, s) {    
-    // ed25519_scalar_complement(comp, s);
-    throw "Undefined";
+/**
+ * Adding two scalars modL
+ *
+ * @param {Float64Array(32)} x - scalar mod L
+ * @param {Float64Array(32)} y - scalar mod L
+ * @return {Float64Array(32)} x + y mod L
+ */
+function crypto_core_ristretto255_scalar_add(x, y) {
+    var z = new Float64Array(32);
+    var res = new Float64Array(32);
+    var i;
+    for (i = 0; i < 32; i++) {
+	z[i] = x[i] + y[i];
+    }
+    lowlevel.modL(res, z);
+    return res;
 }
 
-function crypto_core_ristretto255_scalar_add(z, x, y) {    
-    // ed25519_scalar_add(z, x, y);
-    throw "Undefined";
-}
-
-function crypto_core_ristretto255_scalar_sub(z, x, y) {
-    // ed25519_scalar_sub(z, x, y);
-    throw "Undefined";
+/**
+ * Subtracting two scalars modL
+ *
+ * @param {Float64Array(32)} x - scalar mod L
+ * @param {Float64Array(32)} y - scalar mod L
+ * @return {Float64Array(32)} x - y mod L
+ */
+function crypto_core_ristretto255_scalar_sub(x, y) {
+    var z = new Float64Array(32);
+    var res = new Float64Array(32);
+    var i;
+    for (i = 0; i < 32; i++) {
+	z[i] = x[i] - y[i];
+    }
+    lowlevel.modL(res, z);
+    return res;
 }
 
 /**
@@ -495,11 +528,6 @@ function crypto_core_ristretto255_scalar_mul(x, y) {
     var res = new Float64Array(64);
     ristretto.MmodL(res, x, y);
     return res;
-}
-
-function crypto_core_ristretto255_scalar_reduce(r, s) {
-    // ed25519_scalar_reduce(r, s);
-    throw "Undefined";
 }
 
 /**
@@ -517,8 +545,14 @@ function test_is_zero_array(arr) {
     return 1 & ((d - 1) >> 8);
 }
 
+// constants
+var crypto_core_ristretto255_HASHBYTES = 64
+var crypto_core_ristretto255_BYTES = 32
+var crypto_core_ristretto255_SCALARBYTES = 32
+var crypto_core_ristretto255_NONREDUCEDSCALARBYTES = 64
+
 // Porting libsodium test tv3 https://github.com/jedisct1/libsodium/blob/master/test/default/core_ristretto255.c#L110
-test('Fuzzy checking ristretto ops', () => {
+test('Fuzzy checking ristretto ops: libsodium tv3', () => {
     for (i = 0; i < 100; i++) {
 	// s := random_scalar * BASE
         var r = crypto_core_ristretto255_scalar_random();
@@ -535,11 +569,6 @@ test('Fuzzy checking ristretto ops', () => {
         s = crypto_scalarmult_ristretto255(L, s);
 	// test s == 0
 	expect(test_is_zero_array(s)).toBe(1);
-
-	// crypto_core_ristretto255_HASHBYTES = 64
-	// crypto_core_ristretto255_BYTES = 32
-	// crypto_core_ristretto255_SCALARBYTES = 32
-	// crypto_core_ristretto255_NONREDUCEDSCALARBYTES = 64 - why we even need non-reduced scalars?
 
 	// s := from hash h
 	var h = crypto.randomBytes(64);
@@ -644,3 +673,37 @@ test('Fuzzy checking ristretto ops', () => {
 	}
     }
 });
+
+// Porting libsodium test tv4 https://github.com/jedisct1/libsodium/blob/master/test/default/core_ristretto255.c#L210
+test('Fuzzy checking ristretto ops: libsodium tv4', () => {
+    var i;
+    for (i = 0; i < 100; i++) {
+	// s1 := random
+	var s1 = crypto_core_ristretto255_scalar_random();
+	// s2 := random
+	var s2 = crypto_core_ristretto255_scalar_random();
+	// s3 := s1 + s2
+	var s3 = crypto_core_ristretto255_scalar_add(s1, s2);
+	// s4 := s1 - s2
+	var s4 = crypto_core_ristretto255_scalar_sub(s1, s2);
+	// s2 := s3 + s4 == 2 * org_s1
+	s2 = crypto_core_ristretto255_scalar_add(s3, s4);
+	// s2 := s2 - s1 == org_s1
+	s2 = crypto_core_ristretto255_scalar_sub(s2, s1);
+	// s2 := s3 * s2 == (org_s1 + org_s2) * org_s1
+	s2 = crypto_core_ristretto255_scalar_mul(s3, s2);
+	// s4 = 1/s3 == 1 / (org_s1 + org_s2)
+	s4 = crypto_core_ristretto255_scalar_invert(s3);
+	// s2 := s2 * s4 == org_s1
+	s2 = crypto_core_ristretto255_scalar_mul(s2, s4);
+	// s1 := -s1 == -org_s1
+	s1 = crypto_core_ristretto255_scalar_negate(s1);
+	// s2 := s2 + s1 == 0
+	s2 = crypto_core_ristretto255_scalar_add(s2, s1);
+	// test s2 == 0
+	expect(test_is_zero_array(s2)).toBe(1);
+    }
+});
+
+// TODO: create some massive test file with vectors obtained from libsodium to cross-check compatibility
+// TODO: crypto_core_ristretto255_scalar_negate and crypto_core_ristretto255_scalar_sub need some double-checking - not sure modL works well with vectors having negative components
