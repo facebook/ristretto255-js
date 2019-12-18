@@ -12,7 +12,9 @@
 
   /***
    *** Scalar arithmetic (mod L) for operations in the exponent of elliptic curve points.
-   *** The order of the curve is a prime L = 2^252 + 27742317777372353535851937790883648493, the part being added is 125 bits long.
+   *** The order of the curve is a L * 8, where L is a prime and
+   ***   L = 2^252 + 27742317777372353535851937790883648493 (the part being added is 125 bits long).
+   *** The order of the base point (X, Y) is L.
    *** Constant L is defined in nacl.js.
    *** The function modL() is defined in nacl.js and reduces an element mod L.
    ***/
@@ -577,7 +579,7 @@
    *
    * @param {[Float64Array(16), Float64Array(16), Float64Array(16), Float64Array(16)]} p - the resulting Ed25519 elliptic-curve point.
    * @param {Float64Array(16)} t - a field element.
-   * @return {int} -1 on failure.
+   * @return none
    */
   function ristretto255_elligator(p, t) {
     var c = lowlevel.gf(),
@@ -639,11 +641,12 @@
 
   /**
    * Hash to ristretto group with Elligator.
-   * This function can be used anywhere where a random oracle is required by calling is with a 512-bits random bit-string h
+   * This function can be used anywhere where a random oracle is required by calling it with a 512-bits random bit-string h
    * (can be a SHA-512 hash of a 256-bits randomness source or a HKDF is instantiated from a low-entropy message).
    * See https://ristretto.group/formulas/elligator.html
-   * Note: for h of length 256 bits, then h mod p = 2^255-19 has a slighly larger probability of being in [0, 37], than a uniformly random element mod p.
-   *       To get a bias of at most 1/2^128 h should have at least ceil(log2(p)) + 128 bits = ceil((255 + 128)/8)*8 = 384 bits.
+   * Note: for h of length 256 bits and p = 2^255-19, h mod p has a slighly larger probability of being in [0, 37],
+   *       than a uniformly random element mod p.
+   *       To get a bias of at most 1/2^128, h should have at least ceil(log2(p)) + 128 bits = ceil((255 + 128)/8)*8 = 384 bits.
    *       For a small-length message HKDF can be used to expand and extract the element h.
    *       (see https://www.ietf.org/id/draft-irtf-cfrg-hash-to-curve-05.txt)
    * The reason two base field points are being produced, then hashed and added is the line of work that
@@ -693,6 +696,7 @@
   ristretto.MmodL = MmodL;
   ristretto.ristretto255_frombytes = ristretto255_frombytes;
   ristretto.scalarmodL1 = scalarmodL1;
+  ristretto.neg25519 = neg25519;
 })(
   typeof module !== 'undefined' && module.exports
     ? module.exports
