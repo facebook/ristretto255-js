@@ -1,5 +1,7 @@
-var nacl = require('./nacl.min');
-var ristretto = require('./ristretto.min');
+// var nacl = require('./nacl.min');
+// var ristretto = require('./ristretto.min');
+var nacl = require('./nacl.js');
+var ristretto = require('./ristretto.js');
 var lowlevel = nacl.lowlevel;
 
 /***
@@ -273,9 +275,9 @@ test('Checking PAKE', () => {
  * @param {Float64Array(32)} n - scalar mod L
  * @return {Uint8Array(32)} serialized ristretto point
  */
-function crypto_scalarmult_ristretto255_base(n) {    
+function crypto_scalarmult_ristretto255_base(n) {
     var Q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
-    // TODO: do we need to erase the most significant bit as below?
+    // TODO: do we really need to erase the most significant bit as below?
     /*
     var t = new Uint8Array(32);
     var i;
@@ -707,3 +709,36 @@ test('Fuzzy checking ristretto ops: libsodium tv4', () => {
 
 // TODO: create some massive test file with vectors obtained from libsodium to cross-check compatibility
 // TODO: crypto_core_ristretto255_scalar_negate and crypto_core_ristretto255_scalar_sub need some double-checking - not sure modL works well with vectors having negative components
+
+// Porting Go tests
+// Test basepoint round trip: serialization/deserialization
+test('Ristretto base point round trip', () => {
+    var BASE = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+    lowlevel.scalarbase(BASE, ristretto.scalarmodL1);
+    var base = ristretto.ristretto255_tobytes(BASE);
+    var BASE2 = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+    var res = ristretto.ristretto255_frombytes(BASE2, base);
+    expect(res).not.toBe(-1);
+    var base2 = ristretto.ristretto255_tobytes(BASE2);
+    // test base == base2
+    for (j = 0; j < 32; j++) {
+	expect(base[j]).toBe(base2[j]);
+    }
+});
+
+// Test random point round trip: serialization/deserialization
+test('Ristretto random point round trip', () => {
+    for (i = 0; i < 100; i++) {
+	var RANDOM = ristretto255_random();
+	var random = ristretto.ristretto255_tobytes(RANDOM);
+	var RANDOM2 = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
+	var res = ristretto.ristretto255_frombytes(RANDOM2, random);
+	expect(res).not.toBe(-1);
+	var random2 = ristretto.ristretto255_tobytes(RANDOM2);
+	// test random == random2
+	for (j = 0; j < 32; j++) {
+	    expect(random[j]).toBe(random2[j]);
+	}
+    }
+});
+
