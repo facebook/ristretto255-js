@@ -7,6 +7,8 @@ L = 2^252 + L_low, L is a prime, L_low is a 125 bits number, L_low = 27742317777
 
 Each scalar (a big integer mod L) is of type Float64Array(32). Each of the 32 elements is at most 8 bits (auxiliary bits are needed to accommodate overflows during arithmetic operations).
 
+Scalar operations implement simple school-book methods to achieve small javascript file size.
+
 * **ristretto.crypto_core_ristretto255_scalar_random()**: returns a randomly generated scalar mod L
 * **ristretto.crypto_core_ristretto255_scalar_invert(s)**: returns 1/s mod L
 * **ristretto.crypto_core_ristretto255_scalar_negate(s)**: returns -s mod L

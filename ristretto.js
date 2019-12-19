@@ -681,7 +681,7 @@
      *** High-level ristretto functions that only operate on serialized ristretto points (may drop them for a more compact javascript file).
      *** Note: if the inputs to the functions are not valid (as per spec), the function's behaviour is undefined, it can crash or throw an error.
      ***/
-
+    
     /**
      * Multiply base point by scalar
      *
@@ -829,6 +829,17 @@
     }
 
     /**
+     * Reduces the element mod L
+     *
+     * @param {Float64Array(32)} scalar point will be reduced to range [0, L) and each element will be at most 8 bits
+     */
+    function reducemodL(r) {
+	var x = new Float64Array(64), i;
+	for (i = 0; i < 32; i++) x[i] = r[i];
+	lowlevel.modL(r, x);
+    }
+    
+    /**
      * Generating a random scalar mod L via rejection sampling
      *
      * @return {Float64Array(32)} scalar mod L
@@ -870,7 +881,7 @@
 	return res;
     }
 
-    // TODO: crypto_core_ristretto255_scalar_negate and crypto_core_ristretto255_scalar_sub need some double-checking - not sure modL works well with vectors having negative components
+    // TODO: parse the modL function, make sure it works for negative elements, figure out the bound on elements; can MmodL function not do extra reduction but call modL directly after the school-book multiplication?; should the scalars have the most significant bit erased?
     
     /**
      * Adding a scalar modL
@@ -880,13 +891,13 @@
      */
     function crypto_core_ristretto255_scalar_negate(s) {
 	var neg_s = new Float64Array(32);
-	var res = new Float64Array(32);
 	var i;
+	// neg_s := L - s
 	for (i = 0; i < 32; i++) {
 	    neg_s[i] = -s[i];
 	}
-	lowlevel.modL(res, neg_s);
-	return res;
+	reducemodL(neg_s);
+	return neg_s;
     }
 
     /**
@@ -898,13 +909,12 @@
      */
     function crypto_core_ristretto255_scalar_add(x, y) {
 	var z = new Float64Array(32);
-	var res = new Float64Array(32);
 	var i;
 	for (i = 0; i < 32; i++) {
 	    z[i] = x[i] + y[i];
 	}
-	lowlevel.modL(res, z);
-	return res;
+	reducemodL(z);
+	return z;
     }
 
     /**
@@ -915,14 +925,7 @@
      * @return {Float64Array(32)} x - y mod L
      */
     function crypto_core_ristretto255_scalar_sub(x, y) {
-	var z = new Float64Array(32);
-	var res = new Float64Array(32);
-	var i;
-	for (i = 0; i < 32; i++) {
-	    z[i] = x[i] - y[i];
-	}
-	lowlevel.modL(res, z);
-	return res;
+	return crypto_core_ristretto255_scalar_add(x, crypto_core_ristretto255_scalar_negate(y));
     }
 
     /**

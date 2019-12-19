@@ -1,7 +1,7 @@
-var nacl = require('./nacl.min');
-var ristretto = require('./ristretto.min');
-// var nacl = require('./nacl.js');
-// var ristretto = require('./ristretto.js');
+// var nacl = require('./nacl.min');
+// var ristretto = require('./ristretto.min');
+var nacl = require('./nacl.js');
+var ristretto = require('./ristretto.js');
 var lowlevel = nacl.lowlevel;
 
 /***
@@ -11,6 +11,7 @@ var lowlevel = nacl.lowlevel;
 const crypto = require('crypto');
 
 // Copied here not to expose L from lowlevel solely for the testing purposes
+// TODO: remove? Use the one from nacl.lowlevel?
 var L = new Float64Array([0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10]);
 
 /**
@@ -27,6 +28,7 @@ var scalarmodL = function(init) {
  * Constant scalars of type Float64Array(32)
  */
 var scalarmodL1 = scalarmodL([1]);
+var scalarmodL0 = scalarmodL([0]);
 
 
 /* Helper functions */
@@ -77,12 +79,28 @@ function test_is_zero_array(arr) {
     return 1 & ((d - 1) >> 8);
 }
 
+/**
+ * Testing if the two scalars are the same
+ *
+ * @param {Float64Array(32)} x
+ * @param {Float64Array(32)} y
+ * @return 1 iff x == y
+ */
+function test_scalar_eq(x, y) {
+    var i;
+    for (i = 0; i < 32; i++) {
+	if (x[i] != y[i]) {
+	    return 0;
+	}
+    }
+    return 1;
+}
+
 /***
  *** Tests
  ***/
-
 // suggested value: 100
-var FUZZY_TESTS_ITERATIONS_NUMBER = 100;
+var FUZZY_TESTS_ITERATIONS_NUMBER = 1;
 
 /* Checking for ristretto test vectors from https://ristretto.group/test_vectors/ristretto255.html */
 var encodings_of_small_multiples = [
@@ -541,3 +559,24 @@ test('Ristretto ops', () => {
     expect(byteArrayToHex(ristretto.ristretto255_tobytes(P1))).toBe(byteArrayToHex(ristretto.ristretto255_tobytes(P2)));
 });
 
+// Test border-scalars
+test('Scalar ops', () => {
+    var x = new Float64Array(32);
+    var i;
+    for (i = 0; i < 32; i++) x[i] = L[i];
+
+    x[0] -= 1; // x = L - 1
+    
+    var x_inv = ristretto.crypto_core_ristretto255_scalar_invert(x);
+    // one = x * (1/x)
+    var one = ristretto.crypto_core_ristretto255_scalar_mul(x, x_inv);
+    expect(test_scalar_eq(scalarmodL1, one)).toBe(1);
+    one = ristretto.crypto_core_ristretto255_scalar_mul(x_inv, x);
+    expect(test_scalar_eq(scalarmodL1, one)).toBe(1);
+
+    var zero = ristretto.crypto_core_ristretto255_scalar_add(x, scalarmodL1);
+    expect(test_scalar_eq(scalarmodL0, zero)).toBe(1);
+    
+    var x2 = ristretto.crypto_core_ristretto255_scalar_sub(scalarmodL0, scalarmodL1);
+    expect(test_scalar_eq(x, x2)).toBe(1);
+});

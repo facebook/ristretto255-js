@@ -917,7 +917,7 @@ nacl.lowlevel = {
   crypto_sign_SEEDBYTES: crypto_sign_SEEDBYTES,
   crypto_hash_BYTES: crypto_hash_BYTES,
 
-  /* Exposing low-level functions for Ristretto */
+  /* Exposing 15 low-level functions for Ristretto */
   gf: gf,
   D: D,
   L: L,
@@ -931,8 +931,6 @@ nacl.lowlevel = {
   add: add,
   set25519: set25519,
   modL: modL,
-
-  /* Functions exposed for tests */
   scalarmult: scalarmult,
   scalarbase: scalarbase,
 };
