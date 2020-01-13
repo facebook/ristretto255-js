@@ -1,7 +1,5 @@
-// var nacl = require('./nacl.min');
-// var ristretto = require('./ristretto.min');
-var nacl = require('./nacl.js');
-var ristretto = require('./ristretto.js');
+var nacl = require('./nacl.js').default;
+var ristretto = require('./ristretto.min.js');
 var lowlevel = nacl.lowlevel;
 
 /***
@@ -135,7 +133,7 @@ var Q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
 var q = new Uint8Array(32); // for ristretto encoding
 
 test('Ristretto official: Checking encodings of small multiples', () => {
-  for (i = 0; i < 16; i++) {
+  for (let i = 0; i < 16; i++) {
     lowlevel.scalarbase(P, lowlevel.gf([i]));
     var res = byteArrayToHex(ristretto.ristretto255_tobytes(P));
     expect(res).toBe(encodings_of_small_multiples[i]);
@@ -181,7 +179,7 @@ var bad_encodings = [
 
 /* Testing for bad encodings */
 test('Ristretto official: Checking bad encodings', () => {
-  for (i = 0; i < bad_encodings.length; i++) {
+  for (let i = 0; i < bad_encodings.length; i++) {
     var res = ristretto.ristretto255_frombytes(
       P,
       hexToByteArray(bad_encodings[i]),
@@ -192,7 +190,7 @@ test('Ristretto official: Checking bad encodings', () => {
 
 /* Testing for good encodings: using the small multiples of the base point */
 test('Ristretto official: Checking good encodings', () => {
-  for (i = 0; i < encodings_of_small_multiples.length; i++) {
+  for (let i = 0; i < encodings_of_small_multiples.length; i++) {
     var res = ristretto.ristretto255_frombytes(
       P,
       hexToByteArray(encodings_of_small_multiples[i]),
@@ -232,7 +230,7 @@ var encoded_hash_to_points = [
 ];
 
 test('Ristretto official: Checking hash-to-point', () => {
-  for (i = 0; i < 7; i++) {
+  for (let i = 0; i < 7; i++) {
     var h = crypto
       .createHash('sha512')
       .update(labels[i])
@@ -257,7 +255,7 @@ var HmHmsalt = [
 ]; // H(pw, H(pw)^salt)
 
 test('Checking PAKE', () => {
-  for (i = 0; i < pw.length; i++) {
+  for (let i = 0; i < pw.length; i++) {
     var pwd = new Buffer(pw[i], 'base64');
     var r = new Buffer(blindingFactor[i], 'base64');
     var s = new Buffer(salt[i], 'base64');
@@ -328,13 +326,13 @@ test('Checking PAKE', () => {
 
 // Porting libsodium test tv3 https://github.com/jedisct1/libsodium/blob/master/test/default/core_ristretto255.c#L110
 test('Fuzzy checking ristretto ops: libsodium tv3', () => {
-    for (i = 0; i < FUZZY_TESTS_ITERATIONS_NUMBER; i++) {
+    for (let i = 0; i < FUZZY_TESTS_ITERATIONS_NUMBER; i++) {
 	// s := random_scalar * BASE
         var r = ristretto.crypto_core_ristretto255_scalar_random();
 	var s = ristretto.crypto_scalarmult_ristretto255_base(r);
 	// test s is valid
 	expect(ristretto.crypto_core_ristretto255_is_valid_point(s)).toBe(1);
-	
+
 	// s := random
         s = ristretto.crypto_core_ristretto255_random();
 	// test s is valid
@@ -372,7 +370,7 @@ test('Fuzzy checking ristretto ops: libsodium tv3', () => {
 	// test s_ == s
 	// both s_ and s are of type Uint8Array(32)
 	var j;
-	for (j = 0; j < 32; j++) {
+	for (let j = 0; j < 32; j++) {
 	    expect(s_[j]).toBe(s[j]);
 	}
 
@@ -384,20 +382,20 @@ test('Fuzzy checking ristretto ops: libsodium tv3', () => {
 	// s2 := s + s
 	s2 = ristretto.crypto_core_ristretto255_add(s, s_);
 	// test s2 is valid
-	expect(ristretto.crypto_core_ristretto255_is_valid_point(s2)).toBe(1);	
+	expect(ristretto.crypto_core_ristretto255_is_valid_point(s2)).toBe(1);
 	// s2 := s2 - s
         s2 = ristretto.crypto_core_ristretto255_sub(s2, s_);
 	// test s2 is valid
-	expect(ristretto.crypto_core_ristretto255_is_valid_point(s2)).toBe(1);	
+	expect(ristretto.crypto_core_ristretto255_is_valid_point(s2)).toBe(1);
 	// test s2 == s
-	for (j = 0; j < 32; j++) {
+	for (let j = 0; j < 32; j++) {
 	    expect(s2[j]).toBe(s[j]);
 	}
 
 	// s2 := s2 - s
         s2 = ristretto.crypto_core_ristretto255_sub(s2, s_);
 	// test s2 is valid
-	expect(ristretto.crypto_core_ristretto255_is_valid_point(s2)).toBe(1);	
+	expect(ristretto.crypto_core_ristretto255_is_valid_point(s2)).toBe(1);
 	// test s2 == 0
 	expect(test_is_zero_array(s2)).toBe(1);
 
@@ -429,7 +427,7 @@ test('Fuzzy checking ristretto ops: libsodium tv3', () => {
 	} catch (err) {
 	    expect(0).toBe(1);
 	}
-	
+
 	// sub should throw an exception on invalid inputs
 	try {
 	    ristretto.crypto_core_ristretto255_sub(s_, s);
@@ -453,8 +451,7 @@ test('Fuzzy checking ristretto ops: libsodium tv3', () => {
 
 // Porting libsodium test tv4 https://github.com/jedisct1/libsodium/blob/master/test/default/core_ristretto255.c#L210
 test('Fuzzy checking ristretto ops: libsodium tv4', () => {
-    var i;
-    for (i = 0; i < FUZZY_TESTS_ITERATIONS_NUMBER; i++) {
+    for (let i = 0; i < FUZZY_TESTS_ITERATIONS_NUMBER; i++) {
 	// s1 := random
 	var s1 = ristretto.crypto_core_ristretto255_scalar_random();
 	// s2 := random
@@ -494,14 +491,14 @@ test('Ristretto base point round trip', () => {
     expect(res).not.toBe(-1);
     var base2 = ristretto.ristretto255_tobytes(BASE2);
     // test base == base2
-    for (j = 0; j < 32; j++) {
+    for (let j = 0; j < 32; j++) {
 	expect(base[j]).toBe(base2[j]);
     }
 });
 
 // Test random point round trip: serialization/deserialization
 test('Ristretto random point round trip', () => {
-    for (i = 0; i < FUZZY_TESTS_ITERATIONS_NUMBER; i++) {
+    for (let i = 0; i < FUZZY_TESTS_ITERATIONS_NUMBER; i++) {
 	var RANDOM = ristretto.ristretto255_random();
 	var random = ristretto.ristretto255_tobytes(RANDOM);
 	var RANDOM2 = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
@@ -509,7 +506,7 @@ test('Ristretto random point round trip', () => {
 	expect(res).not.toBe(-1);
 	var random2 = ristretto.ristretto255_tobytes(RANDOM2);
 	// test random == random2
-	for (j = 0; j < 32; j++) {
+	for (let j = 0; j < 32; j++) {
 	    expect(random[j]).toBe(random2[j]);
 	}
     }
@@ -540,11 +537,10 @@ test('Ristretto ops', () => {
 // Test scalar mult and scalar inverse near the modulus
 test('Ristretto ops', () => {
     var s = new Float64Array(32);
-    var i;
-    for (i = 0; i < 32; i++) {
+    for (let i = 0; i < 32; i++) {
 	s[i] = L[i];
     }
-    
+
     var BASE = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
     var P1 = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
     var P2 = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
@@ -568,11 +564,10 @@ test('Ristretto ops', () => {
 // Test border-scalars
 test('Scalar ops', () => {
     var x = new Float64Array(32);
-    var i;
-    for (i = 0; i < 32; i++) x[i] = L[i];
+    for (let i = 0; i < 32; i++) x[i] = L[i];
 
     x[0] -= 1; // x = L - 1
-    
+
     var x_inv = ristretto.crypto_core_ristretto255_scalar_invert(x);
     // one = x * (1/x)
     var one = ristretto.crypto_core_ristretto255_scalar_mul(x, x_inv);
@@ -582,7 +577,7 @@ test('Scalar ops', () => {
 
     var zero = ristretto.crypto_core_ristretto255_scalar_add(x, scalarmodL1);
     expect(test_scalar_eq(scalarmodL0, zero)).toBe(1);
-    
+
     var x2 = ristretto.crypto_core_ristretto255_scalar_sub(scalarmodL0, scalarmodL1);
     expect(test_scalar_eq(x, x2)).toBe(1);
 });

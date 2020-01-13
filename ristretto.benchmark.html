@@ -4,205 +4,7 @@
   <head>
     <title>Benchmarking ristretto in Javascript</title>
     <link rel="stylesheet" type="text/css" href="ristretto.benchmark.style.css">
-    <script src="./require.js"></script>
-    <script>
-      require( ["nacl"],
-	       function(temp) {
-		   //This function will be called when all the dependencies
-		   //listed above are loaded. Note that this function could
-		   //be called before the page is loaded.
-		   require( ["ristretto"],
-			    function(temp2) {
-				// This function will be called when all the dependencies
-				// listed above are loaded. Note that this function could
-				// be called before the page is loaded.
-				// This callback is optional.
-
-				/* Set-up */
-				var t00 = performance.now();
-				var NUM_OF_REPS = 100;
-				var ristretto_EC_points = [];
-				var ristretto_serialized_points = [];
-				var hashes = [];
-				var scalars = [];
-				var t0, t1;
-				/* Generate random ristretto points */
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    let ristretto_EC_point = ristretto.ristretto255_random();
-				    ristretto_EC_points.push(ristretto_EC_point);
-				    ristretto_serialized_points.push(ristretto.ristretto255_tobytes(ristretto_EC_point));
-				    hashes.push(new Uint8Array(crypto.subtle.digest("SHA-512", new TextEncoder("utf-8").encode(i + ""))));
-				    scalars.push(ristretto.crypto_core_ristretto255_scalar_random());
-				}
-				/* ristretto255_random */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.ristretto255_random();
-				}
-				t1 = performance.now();
-				document.getElementById("ristretto255_random").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);//.replace(/\B(?=(\d{3})+(?!\d))/g, ",");				
-				
-				/* ristretto255_tobytes */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.ristretto255_tobytes(ristretto_EC_points[i]);
-				}
-				t1 = performance.now();
-				document.getElementById("ristretto255_tobytes").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* ristretto255_frombytes */
-				t0 = performance.now();
-				var h = [nacl.lowlevel.gf(), nacl.lowlevel.gf(), nacl.lowlevel.gf(), nacl.lowlevel.gf()];
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.ristretto255_frombytes(h, ristretto_serialized_points[i]);
-				}
-				t1 = performance.now();
-				document.getElementById("ristretto255_frombytes").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-
-				/* ristretto255_from_hash */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.ristretto255_from_hash(hashes[i]);
-				}
-				t1 = performance.now();
-				document.getElementById("ristretto255_from_hash").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-
-				/* crypto_core_ristretto255_random */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_core_ristretto255_random();
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_core_ristretto255_random").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* crypto_core_ristretto255_from_hash */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_core_ristretto255_from_hash(hashes[i]);
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_core_ristretto255_from_hash").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* crypto_core_ristretto255_from_add */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_core_ristretto255_add(ristretto_serialized_points[i], ristretto_serialized_points[(i + 1) % NUM_OF_REPS]);
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_core_ristretto255_add").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* crypto_core_ristretto255_from_sub */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_core_ristretto255_sub(ristretto_serialized_points[i], ristretto_serialized_points[(i + 1) % NUM_OF_REPS]);
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_core_ristretto255_sub").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* crypto_scalarmult_ristretto255_base */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_scalarmult_ristretto255_base(scalars[i]);
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_scalarmult_ristretto255_base").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* crypto_scalarmult_ristretto255 */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_scalarmult_ristretto255(scalars[i], ristretto_serialized_points[i]);
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_scalarmult_ristretto255").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-
-				/* crypto_core_ristretto255_scalar_random */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_core_ristretto255_scalar_random();
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_core_ristretto255_scalar_random").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* crypto_core_ristretto255_scalar_invert */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_core_ristretto255_scalar_invert(scalars[i]);
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_core_ristretto255_scalar_invert").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* crypto_core_ristretto255_scalar_negate */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_core_ristretto255_scalar_negate(scalars[i], scalars[i % NUM_OF_REPS]);
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_core_ristretto255_scalar_negate").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* crypto_core_ristretto255_scalar_add */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_core_ristretto255_scalar_add(scalars[i], scalars[i % NUM_OF_REPS]);
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_core_ristretto255_scalar_add").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* crypto_core_ristretto255_scalar_sub */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_core_ristretto255_scalar_sub(scalars[i], scalars[i % NUM_OF_REPS]);
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_core_ristretto255_scalar_sub").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				/* crypto_core_ristretto255_scalar_mul */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.crypto_core_ristretto255_scalar_mul(scalars[i], scalars[i % NUM_OF_REPS]);
-				}
-				t1 = performance.now();
-				document.getElementById("crypto_core_ristretto255_scalar_mul").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-
-				/* ADD */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    nacl.lowlevel.add(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]);
-				}
-				t1 = performance.now();
-				document.getElementById("ADD").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-
-				/* SUB */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    ristretto.sub(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]);
-				}
-				t1 = performance.now();
-				document.getElementById("SUB").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-
-				/* SCALAR_BASE */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    nacl.lowlevel.scalarbase(ristretto_EC_points[i], scalars[i]);
-				}
-				t1 = performance.now();
-				document.getElementById("SCALAR_BASE").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-
-				/* SCALAR_MULT */
-				t0 = performance.now();
-				for (i = 0; i < NUM_OF_REPS; i++) {
-				    nacl.lowlevel.scalarmult(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS], scalars[i]);
-				}
-				t1 = performance.now();
-				document.getElementById("SCALAR_MULT").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
-				
-				var t01 = performance.now();
-				document.getElementById("total_time").innerHTML = "Benchmark runtime: " + ((t01 - t00)/1000).toFixed(2) + " sec with " + NUM_OF_REPS + " reps on each operation.";
-			    }
-			  );
-	       }
-	     );
-
-    </script>
+    <script src="ristretto.min.js"></script>
   </head>
   <body>
 
@@ -263,5 +65,187 @@
       - secp256 curves: typically incomplete addition formulas are used, complete addition formulas exist (https://eprint.iacr.org/2015/1060.pdf), but are about 1.38 times slower.
       (openssl uses  https://github.com/openssl/openssl/blob/7671420d9ebd18242f571866c6adca6f8bcb2f90/crypto/ec/ecp_nistp256.c#L1235 for how it is implemented in OpsnSSL, referencing http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-2007-bl they do have complete addition formulas with cost: 11M + 5S from http://cr.yp.to/talks.html#2001.10.29).
     </div>-->
+
+    <script>
+      /* Set-up */
+      var t00 = performance.now();
+      var NUM_OF_REPS = 100;
+      var ristretto_EC_points = [];
+      var ristretto_serialized_points = [];
+      var hashes = [];
+      var scalars = [];
+      var t0, t1;
+      /* Generate random ristretto points */
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  let ristretto_EC_point = ristretto.ristretto255_random();
+	  ristretto_EC_points.push(ristretto_EC_point);
+	  ristretto_serialized_points.push(ristretto.ristretto255_tobytes(ristretto_EC_point));
+	  hashes.push(new Uint8Array(crypto.subtle.digest("SHA-512", new TextEncoder("utf-8").encode(i + ""))));
+	  scalars.push(ristretto.crypto_core_ristretto255_scalar_random());
+      }
+      /* ristretto255_random */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.ristretto255_random();
+      }
+      t1 = performance.now();
+      document.getElementById("ristretto255_random").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);//.replace(/\B(?=(\d{3})+(?!\d))/g, ",");				
+      
+      /* ristretto255_tobytes */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.ristretto255_tobytes(ristretto_EC_points[i]);
+      }
+      t1 = performance.now();
+      document.getElementById("ristretto255_tobytes").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* ristretto255_frombytes */
+      t0 = performance.now();
+      var h = [ristretto.nacl_gf(), ristretto.nacl_gf(), ristretto.nacl_gf(), ristretto.nacl_gf()];
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.ristretto255_frombytes(h, ristretto_serialized_points[i]);
+      }
+      t1 = performance.now();
+      document.getElementById("ristretto255_frombytes").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+
+      /* ristretto255_from_hash */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.ristretto255_from_hash(hashes[i]);
+      }
+      t1 = performance.now();
+      document.getElementById("ristretto255_from_hash").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+
+      /* crypto_core_ristretto255_random */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_core_ristretto255_random();
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_core_ristretto255_random").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* crypto_core_ristretto255_from_hash */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_core_ristretto255_from_hash(hashes[i]);
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_core_ristretto255_from_hash").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* crypto_core_ristretto255_from_add */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_core_ristretto255_add(ristretto_serialized_points[i], ristretto_serialized_points[(i + 1) % NUM_OF_REPS]);
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_core_ristretto255_add").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* crypto_core_ristretto255_from_sub */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_core_ristretto255_sub(ristretto_serialized_points[i], ristretto_serialized_points[(i + 1) % NUM_OF_REPS]);
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_core_ristretto255_sub").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* crypto_scalarmult_ristretto255_base */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_scalarmult_ristretto255_base(scalars[i]);
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_scalarmult_ristretto255_base").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* crypto_scalarmult_ristretto255 */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_scalarmult_ristretto255(scalars[i], ristretto_serialized_points[i]);
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_scalarmult_ristretto255").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+
+      /* crypto_core_ristretto255_scalar_random */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_core_ristretto255_scalar_random();
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_core_ristretto255_scalar_random").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* crypto_core_ristretto255_scalar_invert */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_core_ristretto255_scalar_invert(scalars[i]);
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_core_ristretto255_scalar_invert").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* crypto_core_ristretto255_scalar_negate */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_core_ristretto255_scalar_negate(scalars[i], scalars[i % NUM_OF_REPS]);
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_core_ristretto255_scalar_negate").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* crypto_core_ristretto255_scalar_add */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_core_ristretto255_scalar_add(scalars[i], scalars[i % NUM_OF_REPS]);
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_core_ristretto255_scalar_add").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* crypto_core_ristretto255_scalar_sub */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_core_ristretto255_scalar_sub(scalars[i], scalars[i % NUM_OF_REPS]);
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_core_ristretto255_scalar_sub").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      /* crypto_core_ristretto255_scalar_mul */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.crypto_core_ristretto255_scalar_mul(scalars[i], scalars[i % NUM_OF_REPS]);
+      }
+      t1 = performance.now();
+      document.getElementById("crypto_core_ristretto255_scalar_mul").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+
+      /* ADD */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.nacl_add(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]);
+      }
+      t1 = performance.now();
+      document.getElementById("ADD").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+
+      /* SUB */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.sub(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]);
+      }
+      t1 = performance.now();
+      document.getElementById("SUB").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+
+      /* SCALAR_BASE */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.nacl_scalarbase(ristretto_EC_points[i], scalars[i]);
+      }
+      t1 = performance.now();
+      document.getElementById("SCALAR_BASE").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+
+      /* SCALAR_MULT */
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  ristretto.nacl_scalarmult(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS], scalars[i]);
+      }
+      t1 = performance.now();
+      document.getElementById("SCALAR_MULT").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+      
+      var t01 = performance.now();
+      document.getElementById("total_time").innerHTML = "Benchmark runtime: " + ((t01 - t00)/1000).toFixed(2) + " sec with " + NUM_OF_REPS + " reps on each operation.";
+    </script>
   </body>
 </html>

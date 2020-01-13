@@ -7,11 +7,19 @@
   "author": "Lera Nikolaenko <valerini@calibra.com>",
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.7.7",
+    "@babel/plugin-transform-modules-commonjs": "^7.7.5",
+    "@babel/preset-env": "^7.7.7",
+    "babel-jest": "^24.9.0",
     "jest": "^24.9.0",
+    "rollup": "^1.29.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-uglify": "^6.0.4",
     "uglify-js": "^3.6.0"
   },
   "scripts": {
-    "build": "uglifyjs ristretto.js -c -m -o ristretto.min.js && uglifyjs nacl.js -c -m -o nacl.min.js",
+    "build": "rollup -c",
     "test": "jest"
-  }
+  },
+  "browserslist": "> 0.25%, not dead"
 }
