@@ -1,0 +1,72 @@
+body {
+    margin: 20px;
+    width: 85%;
+    display: block;
+    margin: auto;
+    font-family: Arial,sans-serif;
+    font-weight: 300;
+}
+
+.container {
+    width: 950px;
+    margin: auto;
+    padding-bottom: 100px;
+}
+
+h1 {
+    color: white;
+    background-color: #001e5c;
+    text-align: center;
+}
+
+total_time {
+    color: #001e5c;
+}
+
+table.benchmarks {
+    table-layout: fixed;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table.benchmarks tr td, table.benchmarks tr th {
+  border: 1px solid #ddd;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+table.benchmarks tr {
+    height: 30px;
+}
+
+table.benchmarks tr:nth-child(even){background-color: #f2f2f2;}
+table.benchmarks tr:hover {background-color: #ddd;}
+
+table.benchmarks th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  padding-left: 8px;
+  padding-right: 8px;
+  text-align: left;
+  background-color: #4CAF50;
+  color: white;
+}
+
+table.benchmarks tr th:nth-of-type(1), table.benchmarks tr td:nth-of-type(1) {
+    width: 300px;
+}
+
+table.benchmarks tr th:nth-of-type(2), table.benchmarks tr td:nth-of-type(2) {
+    text-align: center;
+    width: 100px;
+}
+
+table.benchmarks tr td:nth-of-type(2) {
+    background-color: #ffec95;
+}
+
+table.benchmarks tr:nth-child(even) td:nth-of-type(2) {
+    background-color: #ffd200;
+}

@@ -8,7 +8,11 @@ var lowlevel = nacl.lowlevel;
  *** Helper functions for Tests
  ***/
 
-const crypto = require('crypto');
+// const crypto = require('crypto');
+var crypto = typeof self !== 'undefined' ? (self.crypto || self.msCrypto) : null;
+if ((!crypto || !crypto.getRandomValues) && typeof require !== 'undefined') {
+    crypto = require('crypto');
+}
 
 // Copied here not to expose L from lowlevel solely for the testing purposes
 // TODO: remove? Use the one from nacl.lowlevel?
@@ -342,7 +346,9 @@ test('Fuzzy checking ristretto ops: libsodium tv3', () => {
 	expect(test_is_zero_array(s)).toBe(1);
 
 	// s := from hash h
-	var h = crypto.randomBytes(64);
+	var h = new Uint8Array(64);
+	// var h = crypto.randomBytes(64);
+	h = nacl.randomBytes(64);
 	s = ristretto.crypto_core_ristretto255_from_hash(h);
 	// test s is valid
 	expect(ristretto.crypto_core_ristretto255_is_valid_point(s)).toBe(1);

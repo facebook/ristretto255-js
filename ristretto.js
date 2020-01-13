@@ -1,10 +1,30 @@
+/***
+ * A note on random numbers generations:
+ *   - Math.random() should NOT be used: not a secure way to get a cryptographically secure random number (some browsers do not implement is as a cryptographically secure PRNG and its internal state is shared across multiple websites): see section IV (http://bitwiseshiftleft.github.io/sjcl/acsac.pdf)
+ * window.crypto.getRandomValues() should be used to generate cryptographically secure random numbers. See https://caniuse.com/#feat=getrandomvalues for where this API is supported. Estimates 95.82% of users have support.
+ * Chromium claimed getRandomValues to be getting "a good source of system entropy" (see https://blog.chromium.org/2011/06/new-chromium-security-features-june.html).
+ * Mozilla: "To guarantee enough performance, implementations are not using a truly random number generator, but they are using a pseudo-random number generator seeded with a value with enough entropy. The PRNG used differs from one implementation to the other but is suitable for cryptographic usages." (see https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues)
+
+ * To get a hint at how a random seed is obtained on various operating systems see https://dxr.mozilla.org/mozilla-central/source/third_party/rust/getrandom/src/lib.rs
+ ***/
+
+// TODO: perhaps remove core_ from the prefix of the names of the ristretto functions
+
 (function(ristretto) {
   'use strict';
 
   // TODO: find a workaround, crypto may not be supported
-  var crypto = require('crypto');
-    
-  var nacl = require('./nacl');
+  // var crypto = require('crypto');
+  var crypto = typeof self !== 'undefined' ? (self.crypto || self.msCrypto) : null;
+  if ((!crypto || !crypto.getRandomValues) && typeof require !== 'undefined') {
+      crypto = require('crypto');
+  }
+
+  // For browsers, nacl.js should be loaded separately before loading ristretto.js
+  var nacl = self.nacl;
+  if (typeof module !== 'undefined') {    
+      nacl = require('./nacl');
+  }
   var lowlevel = nacl.lowlevel;
 
   var gf1 = lowlevel.gf([1]);
@@ -106,13 +126,15 @@
     //    i += 1
     //
     // # the carry in the 63-rd element is at most 255, so exactly 8 bits:
-    // print("the highest carry is {}".format(upperbounds[63]))      
+      // print("the highest carry is {}".format(upperbounds[63]))
+      /*
     var carry = 0;
     for (j = 0; j < 64; j++) {
       t[j] += carry;
       carry = t[j] >> 8;
       t[j] &= 255;
     }
+      */
 
     // Reduce t mod L and write to o
     lowlevel.modL(o, t);
@@ -804,7 +826,9 @@
      */
     function ristretto255_random() {
 	// create a random hash string
-	var h = crypto.randomBytes(64);
+	var h = nacl.randomBytes(64);
+	// var h = new Uint8Array(64);
+	// lowlevel.randombytes(h, 64);
 	return ristretto255_from_hash(h);
     }
 
@@ -845,10 +869,11 @@
      * @return {Float64Array(32)} scalar mod L
      */
     function crypto_core_ristretto255_scalar_random() {
-	var r;
+	var r = new Uint8Array(32);;
 	// rejection sampling loop with constant-time body
 	do {
-	    r = crypto.randomBytes(32);
+	    r = nacl.randomBytes(32);
+	    // lowlevel.randombytes(r, 32);
             r[31] &= 0x1f;
 
 	    // constant-time check for r < L, if so break and return r
@@ -980,3 +1005,5 @@
     ? module.exports
     : (self.ristretto = self.ristretto || {})
 );
+
+//})

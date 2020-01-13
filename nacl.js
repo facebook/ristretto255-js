@@ -933,6 +933,7 @@ nacl.lowlevel = {
   modL: modL,
   scalarmult: scalarmult,
   scalarbase: scalarbase,
+  randombytes: randombytes,
 };
 
 /* High-level API */
