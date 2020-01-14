@@ -59,6 +59,15 @@
       </table>
       </div>
       
+      <h2>ECDH with SECP256 from window.crypto</h2>
+      <div class="benchmarks">
+      <table class="benchmarks">
+	<tr><th>Function name</th><th>Time in ms</th><th>Comments</th></tr>
+	<tr><td>window.crypto.subtle.generateKey</td><td id="window.crypto.subtle.generateKey">0.00</td><td>Generates a random ECDH key pair with SECP-256. Essentially the same as nacl.lowlevel.scalarbase except on a different curve and 1000 X slower.</td></tr>
+	<tr><td>window.crypto.subtle.deriveKey</td><td id="window.crypto.subtle.deriveKey">0.00</td><td>Derive a symmetric key for ECDH with SECP-256. Essentially the same as nacl.lowlevel.scalarmult except on a different curve and 500 X slower.</td></tr>
+	
+      </table>
+      </div>
     </div>
     <!--<div class="discussion">
       - see discussion of which ec curves are safe to use: http://safecurves.cr.yp.to/
@@ -246,6 +255,53 @@
       
       var t01 = performance.now();
       document.getElementById("total_time").innerHTML = "Benchmark runtime: " + ((t01 - t00)/1000).toFixed(2) + " sec with " + NUM_OF_REPS + " reps on each operation.";
+
+      /* scalar-to-base multiplication over secp256 EC curve */
+      // see https://8gwifi.org/docs/window-crypto-ecdh.jsp for a useful tutorial
+      var publicKey = {};
+      var privateKey = {};
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+	  let keyPair = window.crypto.subtle.generateKey(
+	      {
+		  name: "ECDH",
+		  namedCurve: "P-256"
+	      },
+	      true, // whether the key is extractable (can be used in exportKey)
+	      ["deriveKey", "deriveBits"]
+	  ).then(function(key) {
+              publicKey.push(key.publicKey);
+              privateKey.push(key.privateKey);
+	  }).catch(function(err) {
+              console.error(err);
+	  });
+      }
+      t1 = performance.now();
+      document.getElementById("window.crypto.subtle.generateKey").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
+
+      /* scalar-to-point multiplication over secp256 EC curve */
+      // Actually this is doing more of course... but the bulk of operations should theoretically go to scalar-to-point mul
+      t0 = performance.now();
+      for (i = 0; i < NUM_OF_REPS; i++) {
+      window.crypto.subtle.deriveKey({
+                    name: "ECDH",
+                    namedCurve: "P-256",
+                    public: publicKey[i],
+                },
+                privateKey[i % NUM_OF_REPS],
+                {
+                    name: "AES-GCM",
+                    length: 256,
+                },
+
+           true, // whether the derived key is extractable (i.e. can be used in exportKey)
+                ["encrypt", "decrypt"]
+            ).catch(function(err) {
+                console.error(err);
+            });
+      }
+      t1 = performance.now();
+      document.getElementById("window.crypto.subtle.deriveKey").innerHTML = "" + ((t1 - t0)/NUM_OF_REPS).toFixed(3);
     </script>
   </body>
 </html>
