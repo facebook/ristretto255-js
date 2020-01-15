@@ -15,8 +15,6 @@ for (let i = 0; i < NUM_OF_REPS; i++) {
     scalars.push(ristretto.scalar_random());
 }
 
-// TODO: add a color-range
-// TODO: add a +- standard deviation for numbers
 const functions = [
     {
 	// ristretto points are represented as Uint8Array(32)
@@ -160,19 +158,51 @@ const template = (groupName, results) => `
     </table>
 </div>`;
 
+// the credit for computing std goes to https://derickbailey.com/2014/09/21/calculating-standard-deviation-with-array-map-and-array-reduce-in-javascript/
+function standardDeviation(values){
+  let avg = average(values);
+  
+  let squareDiffs = values.map(function(value){
+    let diff = value - avg;
+    let sqrDiff = diff * diff;
+    return sqrDiff;
+  });
+  
+  var stdDev = Math.sqrt(average(squareDiffs));
+  return stdDev;
+}
+
+function average(data){
+  let sum = data.reduce(function(sum, value){
+    return sum + value;
+  }, 0);
+
+  let avg = sum / data.length;
+  return avg;
+}
+
 const generateBenchmarks = () => {
 
     functions.forEach(group => {
         const results = group.functions.map(func => {
-            const t0 = performance.now();
+            // const t0 = performance.now();
+	    const timing = [];
             for (i = 0; i < NUM_OF_REPS; i++) {
+		const t00 = performance.now();
                 func.execute();
+		const t01 = performance.now();
+		timing.push(t01-t00);
             }
-            const t1 = performance.now();
+	    // compute the average
+	    var avg = average(timing);
+	    var std = standardDeviation(timing);
+	    
+            // const t1 = performance.now();
             return {
                 functionName: func.name,
                 description: func.description,
-                timing: ((t1 - t0) / NUM_OF_REPS).toFixed(3)
+                // timing: ((t1 - t0) / NUM_OF_REPS).toFixed(3)
+		timing: avg.toFixed(2) + "<small font-size=\"smaller\"> &#177; " + std.toFixed(2) + "</small>"
             }
         });
         document.getElementById('container').innerHTML += template(group.name, results);
