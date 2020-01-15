@@ -998,6 +998,7 @@ ristretto.unsafe_point_add = lowlevel.add;
 ristretto.unsafe_point_scalarmult_base = lowlevel.scalarbase;
 ristretto.unsafe_point_scalarmult = lowlevel.scalarmult;
 ristretto.unsafe_point_random = point_random;
+ristretto.unsafe_gf = lowlevel.gf;
 
 // ristretto.deprecated_point_gf = lowlevel.gf;
 // ristretto.scalarmodL = scalarmodL;

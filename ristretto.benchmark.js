@@ -5,134 +5,135 @@ const ristretto_EC_points = [];
 const ristretto_serialized_points = [];
 const hashes = [];
 const scalars = [];
-const h = [ristretto.nacl_gf(), ristretto.nacl_gf(), ristretto.nacl_gf(), ristretto.nacl_gf()];
+const h = [ristretto.unsafe_gf(), ristretto.unsafe_gf(), ristretto.unsafe_gf(), ristretto.unsafe_gf()];
 /* Generate random ristretto points */
 for (let i = 0; i < NUM_OF_REPS; i++) {
-    const ristretto_EC_point = ristretto.ristretto255_random();
+    const ristretto_EC_point = ristretto.unsafe_point_random();
     ristretto_EC_points.push(ristretto_EC_point);
-    ristretto_serialized_points.push(ristretto.ristretto255_tobytes(ristretto_EC_point));
+    ristretto_serialized_points.push(ristretto.unsafe_tobytes(ristretto_EC_point));
     hashes.push(new Uint8Array(crypto.subtle.digest("SHA-512", new TextEncoder("utf-8").encode(i + ""))));
-    scalars.push(ristretto.crypto_core_ristretto255_scalar_random());
+    scalars.push(ristretto.scalar_random());
 }
 
+// TODO: add a color-range
+// TODO: add a +- standard deviation for numbers
 const functions = [
     {
-        name: "Low-level ristretto functions",
+	// ristretto points are represented as Uint8Array(32)
+        name: "High-level ristretto functions giving a prime order group (ristretto255)",
         functions: [
             {
-                name: "ristretto255_random",
-                description: "Generates a random EC-ristretto point by calling from_hash on 64-elements random byte array",
-                execute: () => ristretto.ristretto255_random(),
+                name: "random",
+                description: "Generate a random group element",
+                execute: () => ristretto.random(),
             },
             {
-                name: "ristretto255_tobytes",
-                description: "Serializes an EC-ristretto point to byte array",
-                execute: () => ristretto.ristretto255_tobytes(ristretto_EC_points[i]),
+                name: "from_hash",
+                description: "Hash to group: generate a group element from 64-element byte array, e.g. an output of SHA-512",
+                execute: () => ristretto.from_hash(hashes[i]),
             },
             {
-                name: "ristretto255_frombytes",
-                description: "Deserializes a byte array to an EC-ristretto point",
-                execute: () => ristretto.ristretto255_tobytes(ristretto_EC_points[i]),
-            },
-            {
-                name: "ristretto255_from_hash",
-                description: "Generates an EC-ristretto point from a 64 elements byte array such as an output of SHA512",
-                execute: () => ristretto.ristretto255_frombytes(h, ristretto_serialized_points[i]),
-            }
-        ],
-    },
-    {
-        name: "High-level ristretto functions",
-        functions: [
-            {
-                name: "crypto_core_ristretto255_random",
-                description: "Generates a random EC-ristretto point and outputs a serialized byte array",
-                execute: () => ristretto.crypto_core_ristretto255_random(),
-            },
-            {
-                name: "crypto_core_ristretto255_from_hash",
-                description: "Generates an EC-ristretto point from hash and outputs a serialized byte array",
-                execute: () => ristretto.crypto_core_ristretto255_from_hash(hashes[i]),
-            },
-            {
-                name: "crypto_core_ristretto255_add",
-                description: "Deserializes input byte arrays to EC-ristretto points, adds them up and outputs a serialized result",
-                execute: () => ristretto.crypto_core_ristretto255_add(ristretto_serialized_points[i], ristretto_serialized_points[(i + 1) % NUM_OF_REPS]),
-            },
-            {
-                name: "crypto_core_ristretto255_sub",
-                description: "Deserializes input byte arrays to EC-ristretto points, subtracts them up and outputs a serialized result",
-                execute: () => ristretto.crypto_core_ristretto255_sub(ristretto_serialized_points[i], ristretto_serialized_points[(i + 1) % NUM_OF_REPS]),
-            },
-            {
-                name: "crypto_scalarmult_ristretto255_base",
-                description: "Multiplies a base EC-ristretto point by a scalar and outputs a serialized result",
-                execute: () => ristretto.crypto_scalarmult_ristretto255_base(scalars[i]),
-            },
-            {
-                name: "crypto_scalarmult_ristretto255",
-                description: "Deserializes the input byte array to an EC-ristretto point, multiplies by a scalar and outputs a serialized result",
-                execute: () => ristretto.crypto_scalarmult_ristretto255(scalars[i], ristretto_serialized_points[i]),
-            },
-        ],
-    },
-    {
-        name: "High-level EC-ristretto functions",
-        functions: [
-            {
-                name: "nacl_add",
-                description: "Add two EC-ristretto points, outputs a resulting EC-ristretto point",
-                execute: () => ristretto.nacl_add(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]),
+                name: "add",
+                description: "Add two group elements",
+                execute: () => ristretto.add(ristretto_serialized_points[i], ristretto_serialized_points[(i + 1) % NUM_OF_REPS]),
             },
             {
                 name: "sub",
-                description: "Subtract two EC-ristretto points, outputs a resulting EC-ristretto point",
-                execute: () => ristretto.sub(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]),
+                description: "Subtract two group elements",
+                execute: () => ristretto.sub(ristretto_serialized_points[i], ristretto_serialized_points[(i + 1) % NUM_OF_REPS]),
             },
             {
-                name: "nacl_scalarbase",
-                description: "Multiply a base EC-ristretto point by a scalar, outputs a resulting EC-ristretto point",
-                execute: () => ristretto.nacl_scalarbase(ristretto_EC_points[i], scalars[i]),
+                name: "scalarmult_base",
+                description: "Multiply a generator of the group by a scalar",
+                execute: () => ristretto.scalarmult_base(scalars[i]),
             },
             {
-                name: "nacl_scalarmult",
-                description: "Multiply an EC-ristretto point by a scalar, outputs a resulting EC-ristretto point",
-                execute: () => ristretto.nacl_scalarmult(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS], scalars[i]),
+                name: "scalarmult",
+                description: "Multiply a group element by a scalar",
+                execute: () => ristretto.scalarmult(scalars[i], ristretto_serialized_points[i]),
+            },
+	    // TODO: add is_valid
+        ],
+    },
+    {
+	// TODO: check if scalars need to be reduced prior to being put on the wire
+	// scalars are represented as Float64Array(16)
+        name: "Scalar operations",
+        functions: [
+            {
+                name: "scalar_random",
+                description: "Generate a random scalar",
+                execute: () => ristretto.scalar_random(),
+            },
+            {
+                name: "scalar_invert",
+                description: "Invert a scalar",
+                execute: () => ristretto.scalar_invert(scalars[i]),
+            },
+            {
+                name: "scalar_negate",
+                description: "Negate a scalar",
+                execute: () => ristretto.scalar_negate(scalars[i], scalars[i % NUM_OF_REPS]),
+            },
+            {
+                name: "scalar_add",
+                description: "Add two scalars",
+                execute: () => ristretto.scalar_add(scalars[i], scalars[i % NUM_OF_REPS]),
+            },
+            {
+                name: "scalar_sub",
+                description: "Subtract two scalars",
+                execute: () => ristretto.scalar_sub(scalars[i], scalars[i % NUM_OF_REPS]),
+            },
+            {
+                name: "scalar_mul",
+                description: "Multiply two scalars",
+                execute: () => ristretto.scalar_mul(scalars[i], scalars[i % NUM_OF_REPS]),
             },
         ],
     },
     {
-        name: "Scalar operations",
+        name: "Low-level functions: unsafe (unless if used by a cryptographer)",
         functions: [
             {
-                name: "crypto_core_ristretto255_scalar_random",
-                description: "Generates a random scalar",
-                execute: () => ristretto.crypto_core_ristretto255_scalar_random(),
+                name: "unsafe_point_random",
+                description: "Generate a random ristretto255 group element represented as curve25519 point",
+                execute: () => ristretto.unsafe_point_random(),
             },
             {
-                name: "crypto_core_ristretto255_scalar_invert",
-                description: "Inverts a scalar",
-                execute: () => ristretto.crypto_core_ristretto255_scalar_invert(scalars[i]),
+                name: "unsafe_tobytes",
+                description: "Serialize a curve25519 point to ristretto255 group element",
+                execute: () => ristretto.unsafe_tobytes(ristretto_EC_points[i]),
             },
             {
-                name: "crypto_core_ristretto255_scalar_negate",
-                description: "Negates a scalar",
-                execute: () => ristretto.crypto_core_ristretto255_scalar_negate(scalars[i], scalars[i % NUM_OF_REPS]),
+                name: "unsafe_frombytes",
+                description: "Deserialize a curve25519 point from ristretto255 group element",
+                execute: () => ristretto.unsafe_frombytes(h, ristretto_serialized_points[i]),
             },
             {
-                name: "crypto_core_ristretto255_scalar_add",
-                description: "Adds two scalars",
-                execute: () => ristretto.crypto_core_ristretto255_scalar_add(scalars[i], scalars[i % NUM_OF_REPS]),
+                name: "unsafe_point_from_hash",
+                description: "Generate a ristretto255 group element represented as curve25519 point from a 64 elements byte array such as an output of SHA512",
+                execute: () => ristretto.unsafe_point_from_hash(hashes[i]),
             },
             {
-                name: "crypto_core_ristretto255_scalar_sub",
-                description: "Subtracts two scalars",
-                execute: () => ristretto.crypto_core_ristretto255_scalar_sub(scalars[i], scalars[i % NUM_OF_REPS]),
+                name: "unsafe_point_add",
+                description: "Add two curve25519 points",
+                execute: () => ristretto.unsafe_point_add(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]),
             },
             {
-                name: "crypto_core_ristretto255_scalar_mul",
-                description: "Multiplies two scalars",
-                execute: () => ristretto.crypto_core_ristretto255_scalar_mul(scalars[i], scalars[i % NUM_OF_REPS]),
+                name: "unsafe_point_sub",
+                description: "Subtract two curve25519 points",
+                execute: () => ristretto.unsafe_point_sub(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]),
+            },
+            {
+                name: "unsafe_point_scalarmult_base",
+                description: "Multiply a curve25519's base point by a scalar",
+                execute: () => ristretto.unsafe_point_scalarmult_base(ristretto_EC_points[i], scalars[i]),
+            },
+            {
+                name: "unsafe_point_scalarmult",
+                description: "Multiply a curve25519's point by a scalar",
+                execute: () => ristretto.unsafe_point_scalarmult(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS], scalars[i]),
             },
         ],
     },
