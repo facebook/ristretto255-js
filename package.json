@@ -21,5 +21,8 @@
     "build": "rollup -c",
     "test": "jest"
   },
-  "browserslist": "> 0.25%, not dead"
+  "browserslist": "> 0.25%, not dead",
+  "dependencies": {
+    "tweetnacl": "^1.0.2"
+  }
 }

@@ -1,4 +1,4 @@
-import nacl from './nacl';
+import nacl from 'tweetnacl';
 
 let crypto;
 if (typeof require !== 'undefined') {
