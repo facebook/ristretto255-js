@@ -12,7 +12,7 @@
  *     Bitshifts preserve the sign: (-9) >> 2 given -3.
  *
  */
-import nacl from './nacl';
+import nacl from 'tweetnacl';
 
 /**
  * A note on random numbers generations.

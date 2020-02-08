@@ -1,4 +1,4 @@
-const nacl = require('./nacl.js').default;
+import nacl from 'tweetnacl';
 const ristretto = require('./ristretto.js').default;
 const lowlevel = nacl.lowlevel;
 
