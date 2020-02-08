@@ -22,8 +22,8 @@ The inputs to all the functions should be valid ristretto255 elements (this can 
 
 All ristretto255 elements are stored in the serialized format as 32-elements byte arrays (of type Uint8Array(32)).
 
-* **ristretto.scalarmult_base(n)**: return n * BASE
-* **ristretto.scalarmult(n, P)**: return n * P
+* **ristretto.scalarmult_base(x)**: return x * BASE
+* **ristretto.scalarmult(x, P)**: return x * P
 * **ristretto.is_valid(P)**: return 0 or 1
 * **ristretto.add(P, Q)**: return P + Q
 * **ristretto.sub(P, Q)**: return P - Q

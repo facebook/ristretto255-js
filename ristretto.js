@@ -1,5 +1,38 @@
+/**
+ * IMPORTANT NOTES
+ *
+ * * Little-endian encoding everywhere: 0x0A0B0C0D 32-bits integer will be stored as Uint8Array([0D, 0C, 0B, 0A]) byte array.
+ *
+ * * Double 64 bits IEEE 754 - default format for a number.
+ *     integer in the range -(2^53 - 1) and 2^53 - 1 can be stored precisely!
+ *     Number.isSafeInteger() might be used to check for that.
+ *
+ * * For binary operations the number is implicitly converted to signed 32-bits integer,
+ *     numbers with more than 32 bits get their most significant bits discarded.
+ *     Bitshifts preserve the sign: (-9) >> 2 given -3.
+ *
+ */
 import nacl from './nacl';
 
+/**
+ * A note on random numbers generations.
+ *   For most of the cryptographic protocols it is crucial to have a good source of randomness.
+ *   This code uses window.crypto.getRandomValues() to generate cryptographically secure random
+ *   numbers as recommended, but it up to the browser to implement this correctly and securely.
+ *   See https://caniuse.com/#feat=getrandomvalues for which browsers support this API.
+ *   Among all internet users, it estimated that 95.82% have support for window.crypto.getRandomValues() API.
+ *   TODO: figure if there are browsers with no window.crypto APIs but which we still want to support,
+ *         if so figure out what to do for them.
+ * 
+ * Chromium: calls into some OS system source to get the randomness (which should be PRNG-base, like /dev/urandom and not dev/random)
+ *           on windows calls RtlGenRandom (see https://github.com/chromium/chromium/blob/c19d212e66aaee4d5095041e128707559e3594f7/base/rand_util_win.cc#L31)
+ *           on POSIX (for mobile clients) calls ReadFromFD (see https://github.com/chromium/chromium/blob/c19d212e66aaee4d5095041e128707559e3594f7/base/rand_util_posix.cc#L53)
+ *           on Google Fuchsia calls zx_cprng_draw (see https://github.com/chromium/chromium/blob/c19d212e66aaee4d5095041e128707559e3594f7/base/rand_util_fuchsia.cc#L12)
+ *           on the rest calls nacl_secure_random (nacl stands for Native Client, not the libsodium library) (see https://github.com/chromium/chromium/blob/c19d212e66aaee4d5095041e128707559e3594f7/base/rand_util_nacl.cc#L19)
+ *              gets randomness from /dev/urandom and otherwise fails (https://chromium.googlesource.com/native_client/src/native_client/+/dbd8b0bdffc2965393aad95c618e7e5c3f8972fb/src/shared/platform/linux/nacl_secure_random.c#22)
+ * 
+ * Mozilla: https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues
+ */
 let crypto;
 if (typeof require !== 'undefined') {
     crypto = require('crypto');
@@ -9,33 +42,21 @@ if (typeof require !== 'undefined') {
 
 const ristretto = {};
 
-/***
- * A note on random numbers generations:
- * window.crypto.getRandomValues() should be used to generate cryptographically secure random numbers. See https://caniuse.com/#feat=getrandomvalues for which browsers support this API. Among all internet users, estimated that 95.82% have support.
- * Chromium claimed getRandomValues to be getting "a good source of system entropy" (see https://blog.chromium.org/2011/06/new-chromium-security-features-june.html).
- * Mozilla: "To guarantee enough performance, implementations are not using a truly random number generator, but they are using a pseudo-random number generator seeded with a value with enough entropy. The PRNG used differs from one implementation to the other but is suitable for cryptographic usages." (see https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues)
-
- * To get a hint at how a random seed is obtained on various operating systems see https://dxr.mozilla.org/mozilla-central/source/third_party/rust/getrandom/src/lib.rs
- ***/
-
 const lowlevel = nacl.lowlevel;
 
 const gf1 = lowlevel.gf([1]);
 
-/*** Important notes:
- *** All encodings are LITTLE-ENDIAN
- ***/
+/**
+ * Scalar arithmetic (mod L) for operations in the exponent of elliptic curve points.
+ * The order of the curve is a L * 8, where L is a prime and
+ *   L = 2^252 + l, 
+ *     here l = 27742317777372353535851937790883648493 = 3 * 610042537739 * 15158679415041928064055629, l is 125 bits long.
+ * The order of the base point (X, Y) is L.
+ * Constant L is defined in nacl.js.
+ * The function modL() is defined in nacl.js and reduces an element mod L.
+ */
 
-/***
- *** Scalar arithmetic (mod L) for operations in the exponent of elliptic curve points.
- *** The order of the curve is a L * 8, where L is a prime and
- ***   L = 2^252 + 27742317777372353535851937790883648493 (the part being added is 125 bits long).
- *** The order of the base point (X, Y) is L.
- *** Constant L is defined in nacl.js.
- *** The function modL() is defined in nacl.js and reduces an element mod L.
- ***/
-
-/* L - 2 = 2^252 + 27742317777372353535851937790883648491 required to compute the inverse */
+/* L - 2, this constant is used to compute the inverse */
 const L_sub_2 = new Float64Array([
     0xeb,
     0xd3,
@@ -93,42 +114,6 @@ function MmodL(o, a, b) {
 	}
     }
 
-    // To reduce elements of t to be less than 8 bits, we propagate the carry above 8 bits to the most significant bits,
-    // The following python simulation of the process shows that in result of this operation all the elements will be of less than 8 bits
-    // with no overflows
-    // #               [0,             1,                  ..., 31,         32,         ..., 62,     63]
-    // # upperbounds = [255*255=65025, 255*255*2 = 130050, ..., 255*255*32, 255*255*31, ..., 255*255, 0]
-    //
-    // upperbounds = []
-    // i = 0
-    // while i <= 31:
-    //   upperbounds.append(255*255*(i+1))
-    //   i += 1
-    // while i <= 62:
-    //   upperbounds.append(255*255*(63 - i))
-    //   i += 1
-    // upperbounds.append(0)
-    //
-    // # simulating the reduction
-    // i = 1
-    // while i < 64:
-    //     # check that addition does not overflows: the result will always be at most 22 bits
-    //     assert upperbounds[i].bit_length() <= 21
-    //     assert (upperbounds[i-1] >> 8).bit_length() <= 21
-    //    upperbounds[i] += upperbounds[i-1] >> 8
-    //    i += 1
-    //
-    // # the carry in the 63-rd element is at most 255, so exactly 8 bits:
-    // print("the highest carry is {}".format(upperbounds[63]))
-    /*
-      var carry = 0;
-      for (j = 0; j < 64; j++) {
-      t[j] += carry;
-      carry = t[j] >> 8;
-      t[j] &= 255;
-      }
-    */
-
     // Reduce t mod L and write to o
     lowlevel.modL(o, t);
 }
@@ -169,9 +154,8 @@ function invmodL(inv_x, x) {
 }
 
 /***
- *** Ristretto functions
- *** See https://ristretto.group/ for a full specification and references.
- *** Ristretto group operates over elliptic curve Ed25519 points, where Ed25510 is a twisted Edwards curve: -x^2 + y^2 = 1 - 121665 / 121666 * x^2 * y^2
+ *** Ristretto functions (see https://ristretto.group/ for reference).
+ *** Ristretto group operates over elliptic curve Ed25519 points, where Ed25510 is a twisted Edwards curve: -x^2 + y^2 = 1 - 121665 / 121666 * x^2 * y^2 mod (2^255 - 19)
  *** The Ed25519 points are represented in extended twisted edwards projective coordinates (https://eprint.iacr.org/2008/522.pdf, page 6):
  ***   each point consists of four field elements (x, y, z, t), where t := xy/z
  *** To move to extended: (x, y, t) -> (x, y, 1, t)
@@ -287,7 +271,7 @@ function iszero25519(p) {
     // otherwise the element is stored mod 2^256-38 for convenience by nacl
     let s = new Uint8Array(32);
     lowlevel.pack25519(s, p);
-    // do byte-by-byte comaprison
+    // do byte-by-byte comparison
     let res = 1;
     for (var i = 0; i < 32; i++) {
 	res &= s[i] == 0;
@@ -705,16 +689,6 @@ function point_from_hash(h) {
  */
 function scalarmult_base(n) {
     let Q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
-    // TODO: do we really need to erase the most significant bit as below?
-    /*
-      let t = new Uint8Array(32);
-      let i;
-      for (i = 0; i < 32; i++) {
-      t[i] = n[i];
-      }
-      t[31] &= 127;
-    */
-
     lowlevel.scalarbase(Q, n); // Q = BASE * n
     return tobytes(Q);
 }
@@ -733,7 +707,6 @@ function scalarmult(n, p) {
     if (frombytes(P, p) != 0) {
         throw "Invalid argument";
     }
-    // TODO: do we need to crop the scalar n[31] &= 127 ?
     lowlevel.scalarmult(Q, P, n); // Q = P * n
     return tobytes(Q);
 }
@@ -900,8 +873,6 @@ function scalar_invert(s) {
     return res;
 }
 
-// TODO: parse the modL function, make sure it works for negative elements, figure out the bound on elements; can MmodL function not do extra reduction but call modL directly after the school-book multiplication?; should the scalars have the most significant bit erased?
-
 /**
  * Adding a scalar modL
  *
@@ -960,51 +931,37 @@ function scalar_mul(x, y) {
     return res;
 }
 
-// constants if needed
-// const ristretto.HASHBYTES = 64
-// const ristretto.BYTES = 32
-// const ristretto.SCALARBYTES = 32
-// const ristretto.NONREDUCEDSCALARBYTES = 64
-
-
 /**
- * IMPORTS
+ * EXPORTS
  * High-level ristretto functions (scalarmult, add, sub, etc.) operate on serialized ristretto points.
  * Serialized ristretto are of type Uint8Array(32).
  * Scalar functions (scalar_invert, scalar_add, etc.) operate on scalars mod L.
  * Scalars are of type Float64Array(32).
  */
-ristretto.scalarmult_base = scalarmult_base; // crypto_scalarmult_ristretto255_base;
-ristretto.scalarmult = scalarmult; // crypto_scalarmult_ristretto255;
-ristretto.is_valid = is_valid; // crypto_core_ristretto255_is_valid_point;
-ristretto.add = add; // crypto_core_ristretto255_add;
-ristretto.sub = sub; // crypto_core_ristretto255_add;
-ristretto.from_hash = from_hash; // crypto_core_ristretto255_from_hash;
-ristretto.random = random; // crypto_core_ristretto255_random;
+ristretto.scalarmult_base = scalarmult_base;
+ristretto.scalarmult = scalarmult;
+ristretto.is_valid = is_valid;
+ristretto.add = add;
+ristretto.sub = sub;
+ristretto.from_hash = from_hash;
+ristretto.random = random;
 
-ristretto.scalar_random = scalar_random; // crypto_core_ristretto255_random;
-ristretto.scalar_invert = scalar_invert; // crypto_core_ristretto255_scalar_invert;
-ristretto.scalar_negate = scalar_negate; // crypto_core_ristretto255_scalar_invert;
-ristretto.scalar_add = scalar_add; // crypto_core_ristretto255_scalar_add;
-ristretto.scalar_sub = scalar_sub; // crypto_core_ristretto255_scalar_sub;
-ristretto.scalar_mul = scalar_mul; // crypto_core_ristretto255_scalar_mul;
+ristretto.scalar_random = scalar_random;
+ristretto.scalar_invert = scalar_invert;
+ristretto.scalar_negate = scalar_negate;
+ristretto.scalar_add = scalar_add;
+ristretto.scalar_sub = scalar_sub;
+ristretto.scalar_mul = scalar_mul;
 
 /* These functions are exposed for benchmarking and testing purposes only and should not be used in any production environments */
-ristretto.unsafe_point_from_hash = point_from_hash; // ristretto255_from_hash
-ristretto.unsafe_tobytes = tobytes; // ristretto255_tobytes
-ristretto.unsafe_frombytes = frombytes; // ristretto255_frombytes
-ristretto.unsafe_point_sub = lowlevel_sub; // sub
+ristretto.unsafe_point_from_hash = point_from_hash;
+ristretto.unsafe_tobytes = tobytes;
+ristretto.unsafe_frombytes = frombytes;
+ristretto.unsafe_point_sub = lowlevel_sub;
 ristretto.unsafe_point_add = lowlevel.add;
 ristretto.unsafe_point_scalarmult_base = lowlevel.scalarbase;
 ristretto.unsafe_point_scalarmult = lowlevel.scalarmult;
 ristretto.unsafe_point_random = point_random;
 ristretto.unsafe_gf = lowlevel.gf;
-
-// ristretto.deprecated_point_gf = lowlevel.gf;
-// ristretto.scalarmodL = scalarmodL;
-// ristretto.invmodL = invmodL;
-// ristretto.MmodL = MmodL;
-// ristretto.scalarmodL1 = scalarmodL1;
-// ristretto.neg25519 = neg25519;
 
 export default ristretto;
