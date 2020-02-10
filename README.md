@@ -29,3 +29,7 @@ All ristretto255 elements are stored in the serialized format as 32-elements byt
 * **ristretto.sub(P, Q)**: return P - Q
 * **ristretto.from_hash(h)**: return P instantiated from Uint8Array(64) such as the output of SHA512
 * **ristretto.random()**: returns a random element of ristretto255
+
+
+### License
+Ristretto255.js is [MIT licensed](./LICENSE).
