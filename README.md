@@ -1,5 +1,53 @@
-# tweetnacl-ristretto-js-private
-(Private version of) TweetNacl Ristretto JS implementation.
+TweetNaCl-Ristretto.js
+============
+
+[Ristretto255](https://ristretto.group/) group operations added to TweetNaCl Javascript library
+for modern browsers and Node.js.
+
+Documentation
+=============
+
+* [Overview](#overview)
+* [Installation](#installation)
+* [Examples](#examples)
+* [Usage](#usage)
+  * [Public-key authenticated encryption (box)](#public-key-authenticated-encryption-box)
+  * [Secret-key authenticated encryption (secretbox)](#secret-key-authenticated-encryption-secretbox)
+  * [Scalar multiplication](#scalar-multiplication)
+  * [Signatures](#signatures)
+  * [Hashing](#hashing)
+  * [Random bytes generation](#random-bytes-generation)
+  * [Constant-time comparison](#constant-time-comparison)
+* [System requirements](#system-requirements)
+* [Development and testing](#development-and-testing)
+* [Benchmarks](#benchmarks)
+* [Contributors](#contributors)
+* [Who uses it](#who-uses-it)
+
+Overview
+--------
+
+This project gives a highlevel API to do operations in ristretto255 prime-order group.
+Ristretto255 group enjoys the speed and safety of Curve25519 while also being prime-order, so that cryptographic protocols using it may not worry about the cofactor-related attacks.
+
+There are multiple useful files in the repository:
+
+* `ristretto.js` contains a well documented javascript code exporting function that provide operations over the prim-order group ristretto255 as well as operations over the scalars for that group,
+
+* `ristretto.min.js` contains a minified variant of `ristretto.js` identical to it in functionality and can be served to clients,
+
+* `ristretto.benchmarks.html` shows an example of usage for all the exported functions, this file from whitin the cloned repo can be opened in the browser to check the speed and support for the functions.
+
+Installation
+------------
+
+Examples
+--------
+`ristretto.benchmarks.html` shows an example of usage for all the exported functions.
+
+Usage
+-----
+
 The implementation provides the following set of arithmetic operations.
 
 ##### Operations over scalars - big integers modulo L
@@ -30,6 +78,25 @@ All ristretto255 elements are stored in the serialized format as 32-elements byt
 * **ristretto.from_hash(h)**: return P instantiated from Uint8Array(64) such as the output of SHA512
 * **ristretto.random()**: returns a random element of ristretto255
 
+
+System requirements
+-------------------
+
+We inherit the limitations of TweetNaCl.js and support modern browsers that support
+window.crypto.API (which can be checked here ).
+
+TweetNaCl.js supports modern browsers that have a cryptographically secure
+pseudorandom number generator and typed arrays, including the latest versions
+of:
+
+* Chrome
+* Firefox
+* Safari (Mac, iOS)
+* Internet Explorer 11
+
+Other systems:
+
+* Node.js
 
 ### License
 Ristretto255.js is [MIT licensed](./LICENSE).

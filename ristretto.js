@@ -966,23 +966,23 @@ ristretto.scalar_sub = scalar_sub;
 ristretto.scalar_mul = scalar_mul;
 
 /* These functions are exposed for benchmarking and testing purposes only and should not be used in any production environments */
-ristretto_unsafe.point_from_hash = point_from_hash;
-ristretto_unsafe.tobytes = tobytes;
-ristretto_unsafe.frombytes = frombytes;
-ristretto_unsafe.point_sub = lowlevel_sub;
-ristretto_unsafe.point_add = lowlevel.add;
-ristretto_unsafe.point_scalarmult_base = lowlevel.scalarbase;
-ristretto_unsafe.point_scalarmult = lowlevel.scalarmult;
-ristretto_unsafe.point_random = point_random;
-ristretto_unsafe.gf = lowlevel.gf;
+ristretto.unsafe = {}
+ristretto.unsafe.point_from_hash = point_from_hash;
+ristretto.unsafe.tobytes = tobytes;
+ristretto.unsafe.frombytes = frombytes;
+ristretto.unsafe.point_sub = lowlevel_sub;
+ristretto.unsafe.point_add = lowlevel.add;
+ristretto.unsafe.point_scalarmult_base = lowlevel.scalarbase;
+ristretto.unsafe.point_scalarmult = lowlevel.scalarmult;
+ristretto.unsafe.point_random = point_random;
+ristretto.unsafe.gf = lowlevel.gf;
 
-ristretto_unsafe.constants = {};
-ristretto_unsafe.constants.L_sub_2 = L_sub_2;
-ristretto_unsafe.constants.sqrtm1 = sqrtm1;
-ristretto_unsafe.constants.sqrtadm1 = sqrtadm1;
-ristretto_unsafe.constants.invsqrtamd = invsqrtamd;
-ristretto_unsafe.constants.onemsqd = onemsqd;
-ristretto_unsafe.constants.sqdmone = sqdmone;
+ristretto.unsafe.constants = {};
+ristretto.unsafe.constants.L_sub_2 = L_sub_2;
+ristretto.unsafe.constants.sqrtm1 = sqrtm1;
+ristretto.unsafe.constants.sqrtadm1 = sqrtadm1;
+ristretto.unsafe.constants.invsqrtamd = invsqrtamd;
+ristretto.unsafe.constants.onemsqd = onemsqd;
+ristretto.unsafe.constants.sqdmone = sqdmone;
 
 export default ristretto;
-export {ristretto_unsafe as unsafe}
