@@ -3,7 +3,7 @@
  *
  * * Little-endian encoding everywhere: 0x0A0B0C0D 32-bits integer will be stored as Uint8Array([0D, 0C, 0B, 0A]) byte array.
  *
- * * Double 64 bits IEEE 754 - default format for a number.
+ * * Double 64 bits IEEE 754 - default format for a number in javascript.
  *     integer in the range -(2^53 - 1) and 2^53 - 1 can be stored precisely!
  *     Number.isSafeInteger() might be used to check for that.
  *
@@ -18,13 +18,14 @@ import nacl from 'tweetnacl';
  * A note on random numbers generations.
  *   For most of the cryptographic protocols it is crucial to have a good source of randomness.
  *   This code uses window.crypto.getRandomValues() to generate cryptographically secure random
- *   numbers as recommended, but it up to the browser to implement this correctly and securely.
+ *   numbers as recommended (inheritting this from tweetnacl's nacl.randomBytes),
+ *   but it is up to the browser to implement this correctly and securely.
  *   See https://caniuse.com/#feat=getrandomvalues for which browsers support this API.
  *   Among all internet users, it estimated that 95.82% have support for window.crypto.getRandomValues() API.
  *   TODO: figure if there are browsers with no window.crypto APIs but which we still want to support,
  *         if so figure out what to do for them.
  * 
- * Chromium: calls into some OS system source to get the randomness (which should be PRNG-base, like /dev/urandom and not dev/random)
+ * E.g. Chromium: calls into some OS system source to get the randomness (which should be PRNG-base, like /dev/urandom and not dev/random)
  *           on windows calls RtlGenRandom (see https://github.com/chromium/chromium/blob/c19d212e66aaee4d5095041e128707559e3594f7/base/rand_util_win.cc#L31)
  *           on POSIX (for mobile clients) calls ReadFromFD (see https://github.com/chromium/chromium/blob/c19d212e66aaee4d5095041e128707559e3594f7/base/rand_util_posix.cc#L53)
  *           on Google Fuchsia calls zx_cprng_draw (see https://github.com/chromium/chromium/blob/c19d212e66aaee4d5095041e128707559e3594f7/base/rand_util_fuchsia.cc#L12)
@@ -41,6 +42,7 @@ if (typeof require !== 'undefined') {
 }
 
 const ristretto = {};
+const ristretto_unsafe = {};
 
 const lowlevel = nacl.lowlevel;
 
@@ -135,17 +137,20 @@ function SmodL(o, a) {
  * A more efficient approach for inversion (also implemented in curve25519-dalek) requires only 250 squarings and 34 multiplications
  * (see https://briansmith.org/ecc-inversion-addition-chains-01#curve25519_scalar_inversion), but the code will be more lengthy.
  *
- * @param {Float64Array(32)} x scalar mod L, each element of x should be at most 8 bits.
- * @param {Float64Array(32)} inv_x scalar mod L for result, each element of inv_x should be at most 8 bits.
+ * @param {Float64Array(32)} x scalar reduced mod L, each element of x should be at most 8 bits.
+ * @param {Float64Array(32)} inv_x scalar reduced mod L for result, each element of inv_x should be at most 8 bits.
  */
 function invmodL(inv_x, x) {
     let tmp = new Float64Array(32);
     let i;
     for (i = 0; i < 32; i++) tmp[i] = x[i];
     for (i = 251; i >= 0; i--) {
-	// parsing the bits of the modulus
+	// squaring
 	SmodL(tmp, tmp);
-	if (((L_sub_2[i >> 3] >>> (i & 0x07)) & 1) !== 0) {
+	// parsing the bits of the modulus
+	// i & 0x07 == i % 8
+	// i >> 3 == i / 8 (integer division)
+	if (((L_sub_2[i >> 3] >> (i & 0x07)) & 1) !== 0) {
             // multiply by x
             MmodL(tmp, tmp, x);
 	}
@@ -954,14 +959,23 @@ ristretto.scalar_sub = scalar_sub;
 ristretto.scalar_mul = scalar_mul;
 
 /* These functions are exposed for benchmarking and testing purposes only and should not be used in any production environments */
-ristretto.unsafe_point_from_hash = point_from_hash;
-ristretto.unsafe_tobytes = tobytes;
-ristretto.unsafe_frombytes = frombytes;
-ristretto.unsafe_point_sub = lowlevel_sub;
-ristretto.unsafe_point_add = lowlevel.add;
-ristretto.unsafe_point_scalarmult_base = lowlevel.scalarbase;
-ristretto.unsafe_point_scalarmult = lowlevel.scalarmult;
-ristretto.unsafe_point_random = point_random;
-ristretto.unsafe_gf = lowlevel.gf;
+ristretto_unsafe.point_from_hash = point_from_hash;
+ristretto_unsafe.tobytes = tobytes;
+ristretto_unsafe.frombytes = frombytes;
+ristretto_unsafe.point_sub = lowlevel_sub;
+ristretto_unsafe.point_add = lowlevel.add;
+ristretto_unsafe.point_scalarmult_base = lowlevel.scalarbase;
+ristretto_unsafe.point_scalarmult = lowlevel.scalarmult;
+ristretto_unsafe.point_random = point_random;
+ristretto_unsafe.gf = lowlevel.gf;
+
+ristretto_unsafe.constants = {};
+ristretto_unsafe.constants.L_sub_2 = L_sub_2;
+ristretto_unsafe.constants.sqrtm1 = sqrtm1;
+ristretto_unsafe.constants.sqrtadm1 = sqrtadm1;
+ristretto_unsafe.constants.invsqrtamd = invsqrtamd;
+ristretto_unsafe.constants.onemsqd = onemsqd;
+ristretto_unsafe.constants.sqdmone = sqdmone;
 
 export default ristretto;
+export {ristretto_unsafe as unsafe}
