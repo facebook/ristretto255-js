@@ -38,20 +38,6 @@ Usage
 
 The implementation `ristretto.js` exports the following set of arithmetic operations.
 
-##### Operations over scalars - big integers modulo L, where
-`L = 2^252 + 27742317777372353535851937790883648493`.
-
-Each scalar (a big integer mod L) is of type `Float64Array(32)`. Each of the 32 elements is at most 8 bits (auxiliary bits are needed to accommodate overflows during arithmetic operations).
-
-Scalar operations implement simple school-book methods to achieve small javascript file size.
-
-* **scalar_random()**: returns a randomly generated scalar mod L
-* **scalar_add(x, y)**: returns x + y mod L
-* **scalar_sub(x, y)**: returns x - y mod L
-* **scalar_negate(x)**: returns -x mod L
-* **scalar_mul(x, y)**: returns x * y mod L
-* **scalar_invert(x)**: returns 1/x mod L
-
 ##### Operations over a prime order group (ristretto255) of order L
 
 The inputs to all the functions should be valid ristretto255 elements (this can be checked with ristretto.is_valid_point() -> 0/1), otherwise the behavior is unpredicted and functions may throw exceptions.
@@ -66,7 +52,21 @@ All ristretto255 elements are stored in the serialized format as 32-elements byt
 * **scalarmult_base(x)**: return x * BASE
 * **scalarmult(x, P)**: return x * P
 
-##### Unsafe operations over Edwards points
+##### Operations over scalars - big integers modulo L, where
+`L = 2^252 + 27742317777372353535851937790883648493`.
+
+Each scalar (a big integer mod L) is of type `Float64Array(32)`. Each of the 32 elements is at most 8 bits (auxiliary bits are needed to accommodate overflows during arithmetic operations).
+
+Scalar operations implement simple school-book methods to achieve small javascript file size.
+
+* **scalar_random()**: returns a randomly generated scalar mod L
+* **scalar_add(x, y)**: returns x + y mod L
+* **scalar_sub(x, y)**: returns x - y mod L
+* **scalar_negate(x)**: returns -x mod L
+* **scalar_mul(x, y)**: returns x * y mod L
+* **scalar_invert(x)**: returns 1/x mod L
+
+##### Unsafe operations over Edwards EC points
 
 Unsafe operations give a way to use the ristretto group more efficiently, but these APIs should be used with great care.
 To guarantee security of crypto-protocols the EC points stored on disk or transfered over the wire should be serialized first with `tobytes`.
@@ -75,14 +75,14 @@ The format for the EC point (elliptic curve point) is four coordinates `[gf(), g
 
 The ristretto group gives a way to map ristretto group elemenst to Edwards points (frombytes) and to convert a certain subset of Edwards points back to ristretto group elements (tobytes).
 
-* **unsafe.gf**: creates a coordinate element
-* **unsafe.point_from_hash**: instantiates an EC point from a 64-elements byte array `Uint8Array(64)` such as an output of `SHA512`
-* **unsafe.tobytes**: converts an EC point to a ristretto255 element (not that the conversion is well defined only for points in 2E, where E is the set of all the points on the Edwards curve birationally equivalent to Curve25519
+* **unsafe.gf**: creates one zero coordinate, `[gf(), gf(), gf(), gf()]` will give an EC point type
+* **unsafe.point_from_hash**: generates an EC point from a 64-elements byte array `Uint8Array(64)` such as an output of `SHA512`
+* **unsafe.tobytes**: converts an EC point to a ristretto255 element (the conversion is well defined only for even EC points)
 * **unsafe.frombytes**: converts a ristretto255 element to an EC point
 * **unsafe.point_sub**: subtracts two EC points
 * **unsafe.point_add**: adds two EC points
-* **unsafe.point_scalarmult_base**: multiplies the base point by a scalar
-* **unsafe.point_scalarmult**: multiplies a given point by a scaral
+* **unsafe.point_scalarmult_base**: multiplies the base EC point by a scalar
+* **unsafe.point_scalarmult**: multiplies a given EC point by a scaral
 * **unsafe.point_random**: generates a random EC point
 
 
@@ -105,23 +105,17 @@ Benchmarks
 To run benchmarks in a browser open ristretto.benchmark.html in a browser.
 Here are the benchmarks from MacBook Pro (15-inch, 2018) with 2.9 GHz Intel Core i9
 
-|                           | ristretto.js |
-| ------------------------- |:------------:|
-| random                    | 0.48 ms      |
-| from_hash                 | 0.53 ms      |
-| add                       | 0.41 ms      |
-| sub                       | 0.41 ms      |
-| scalarmult_base           | 3.47 ms      |
-| scalarmult                | 3.61 ms      |
-| ------------------------- |:------------:|
-| scalar_random             | 0.01 ms      |
-| scalar_invert             | 2.60 ms      |
-| scalar_negate             | 0.01 ms      |
-| scalar_add                | 0.02 ms      |
-| scalar_sub                | 0.03 ms      |
-| scalar_mul                | 0.01 ms      |
-| ------------------------- |:------------:|
-| UNSAFE                    |              |
+| ristretto255 group        |              | scalar group              |              |
+| ------------------------- |:------------:| ------------------------- |:------------:|
+| random                    | 0.48 ms      | scalar_random             | 0.01 ms      |
+| from_hash                 | 0.53 ms      | scalar_invert             | 2.60 ms      |
+| add                       | 0.41 ms      | scalar_negate             | 0.01 ms      |
+| sub                       | 0.41 ms      | scalar_add                | 0.02 ms      |
+| scalarmult_base           | 3.47 ms      | scalar_sub                | 0.03 ms      |
+| scalarmult                | 3.61 ms      | scalar_sub                | 0.03 ms      |
+|                           |              | scalar_mul                | 0.01 ms      |
+
+| UNSAFE - Edwards EC group |              |
 | ------------------------- |:------------:|
 | point_random              | 0.26 ms      |
 | tobytes                   | 0.13 ms      |
