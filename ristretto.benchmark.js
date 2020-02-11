@@ -12,12 +12,12 @@ const ristretto_EC_points = [];
 const ristretto_serialized_points = [];
 const hashes = [];
 const scalars = [];
-const h = [ristretto.unsafe_gf(), ristretto.unsafe_gf(), ristretto.unsafe_gf(), ristretto.unsafe_gf()];
+const h = [ristretto.unsafe.gf(), ristretto.unsafe.gf(), ristretto.unsafe.gf(), ristretto.unsafe.gf()];
 /* Generate random ristretto points */
 for (let i = 0; i < NUM_OF_REPS; i++) {
-    const ristretto_EC_point = ristretto.unsafe_point_random();
+    const ristretto_EC_point = ristretto.unsafe.point_random();
     ristretto_EC_points.push(ristretto_EC_point);
-    ristretto_serialized_points.push(ristretto.unsafe_tobytes(ristretto_EC_point));
+    ristretto_serialized_points.push(ristretto.unsafe.tobytes(ristretto_EC_point));
     hashes.push(new Uint8Array(crypto.subtle.digest("SHA-512", new TextEncoder("utf-8").encode(i + ""))));
     scalars.push(ristretto.scalar_random());
 }
@@ -103,42 +103,42 @@ const functions = [
             {
                 name: "unsafe_point_random",
                 description: "Generate a random ristretto255 group element represented as curve25519 point",
-                execute: () => ristretto.unsafe_point_random(),
+                execute: () => ristretto.unsafe.point_random(),
             },
             {
                 name: "unsafe_tobytes",
                 description: "Serialize a curve25519 point to ristretto255 group element",
-                execute: () => ristretto.unsafe_tobytes(ristretto_EC_points[i]),
+                execute: () => ristretto.unsafe.tobytes(ristretto_EC_points[i]),
             },
             {
                 name: "unsafe_frombytes",
                 description: "Deserialize a curve25519 point from ristretto255 group element",
-                execute: () => ristretto.unsafe_frombytes(h, ristretto_serialized_points[i]),
+                execute: () => ristretto.unsafe.frombytes(h, ristretto_serialized_points[i]),
             },
             {
                 name: "unsafe_point_from_hash",
                 description: "Generate a ristretto255 group element represented as curve25519 point from a 64 elements byte array such as an output of SHA512",
-                execute: () => ristretto.unsafe_point_from_hash(hashes[i]),
+                execute: () => ristretto.unsafe.point_from_hash(hashes[i]),
             },
             {
                 name: "unsafe_point_add",
                 description: "Add two curve25519 points",
-                execute: () => ristretto.unsafe_point_add(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]),
+                execute: () => ristretto.unsafe.point_add(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]),
             },
             {
                 name: "unsafe_point_sub",
                 description: "Subtract two curve25519 points",
-                execute: () => ristretto.unsafe_point_sub(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]),
+                execute: () => ristretto.unsafe.point_sub(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS]),
             },
             {
                 name: "unsafe_point_scalarmult_base",
                 description: "Multiply a curve25519's base point by a scalar",
-                execute: () => ristretto.unsafe_point_scalarmult_base(ristretto_EC_points[i], scalars[i]),
+                execute: () => ristretto.unsafe.point_scalarmult_base(ristretto_EC_points[i], scalars[i]),
             },
             {
                 name: "unsafe_point_scalarmult",
                 description: "Multiply a curve25519's point by a scalar",
-                execute: () => ristretto.unsafe_point_scalarmult(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS], scalars[i]),
+                execute: () => ristretto.unsafe.point_scalarmult(ristretto_EC_points[i], ristretto_EC_points[i % NUM_OF_REPS], scalars[i]),
             },
         ],
     },
