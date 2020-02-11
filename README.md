@@ -9,20 +9,10 @@ Documentation
 
 * [Overview](#overview)
 * [Installation](#installation)
-* [Examples](#examples)
 * [Usage](#usage)
-  * [Public-key authenticated encryption (box)](#public-key-authenticated-encryption-box)
-  * [Secret-key authenticated encryption (secretbox)](#secret-key-authenticated-encryption-secretbox)
-  * [Scalar multiplication](#scalar-multiplication)
-  * [Signatures](#signatures)
-  * [Hashing](#hashing)
-  * [Random bytes generation](#random-bytes-generation)
-  * [Constant-time comparison](#constant-time-comparison)
 * [System requirements](#system-requirements)
 * [Development and testing](#development-and-testing)
 * [Benchmarks](#benchmarks)
-* [Contributors](#contributors)
-* [Who uses it](#who-uses-it)
 
 Overview
 --------
@@ -83,7 +73,7 @@ System requirements
 -------------------
 
 We inherit the limitations of TweetNaCl.js and support modern browsers that support
-window.crypto.API (which can be checked here ).
+window.crypto API (which can be checked here ).
 
 TweetNaCl.js supports modern browsers that have a cryptographically secure
 pseudorandom number generator and typed arrays, including the latest versions
@@ -97,6 +87,15 @@ of:
 Other systems:
 
 * Node.js
+
+Development and testing
+------------------------
+
+Benchmarks
+----------
+
+Contributors
+------------
 
 ### License
 Ristretto255.js is [MIT licensed](./LICENSE).
