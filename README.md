@@ -33,6 +33,11 @@ Installation
 
 TODO
 
+`yarn`
+
+To build `ristretto.min.js` run: `yarn build`
+To execute the tests, run: `yarn test`
+
 Usage
 -----
 
