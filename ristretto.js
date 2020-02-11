@@ -1,4 +1,11 @@
 /**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/**
  * IMPORTANT NOTES
  *
  * * Little-endian encoding everywhere: 0x0A0B0C0D 32-bits integer will be stored as Uint8Array([0D, 0C, 0B, 0A]) byte array.
