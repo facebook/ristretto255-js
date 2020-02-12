@@ -1,4 +1,4 @@
-TweetNaCl-Ristretto.js
+Ristretto255.js
 ============
 
 [Ristretto255](https://ristretto.group/) group operations added to TweetNaCl Javascript library

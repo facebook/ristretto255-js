@@ -1,6 +1,6 @@
 {
-  "name": "tweetnacl-ristretto",
-  "version": "1.0.0",
+  "name": "ristretto255",
+  "version": "0.1.0",
   "description": "This library supports ristretto255 group operations on top of TweetNacl",
   "main": "ristretto.js",
   "repository": "git@github.com:calibra/tweetnacl-ristretto-js-private.git",
@@ -25,20 +25,6 @@
   },
   "browserslist": "> 0.25%, not dead",
   "dependencies": {
-    "tweetnacl": "^1.0.2"
-  },
-
-  "COMMENTS_DELETE_ME": {
-    "@babel/core": "^7.7.7",
-    "@babel/plugin-transform-modules-commonjs": "^7.7.5",
-    "@babel/preset-env": "^7.7.7",
-    "@rollup/plugin-commonjs": "^11.0.1",
-    "@rollup/plugin-node-resolve": "^7.0.0",
-    "babel-jest": "^24.9.0",
-    "jest": "^24.9.0",
-    "rollup": "^1.31.0",
-    "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-uglify": "^6.0.4"
+    "tweetnacl": "^1.0.3"
   }
 }
