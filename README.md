@@ -21,7 +21,7 @@ Overview
 This project gives a high-level JavaScript API for operations in the
 [ristretto255](https://ristretto.group/) prime-order group. The ristretto255
 group enjoys the speed and safety of Curve25519 while also being prime-order, so
-that cryptographic protocols using it not need to worry about  cofactor-related
+that cryptographic protocols using it not need to worry about cofactor-related
 attacks.
 
 There are multiple useful files in the repository:
@@ -31,7 +31,7 @@ There are multiple useful files in the repository:
   ristretto255 as well as operations over the scalars for that group,
 
 * [ristretto.min.js](./ristretto.min.js) is a minified variant of `ristretto.js`
-  identical to it in functionality, this file is ship-ready,
+  identical to it in functionality; this file is ship-ready,
 
 * [ristretto.benchmarks.html](./ristretto.benchmarks.html) shows an example of
   usage for all the exported functions. This file can be opened in the browser
@@ -87,14 +87,14 @@ javascript file size.
 
 Unsafe operations give a way to use the ristretto group more efficiently, but
 these APIs should be used with great care. To guarantee security of
-crypto-protocols the EC points stored on disk or transfered over the wire should
+crypto-protocols the EC points stored on disk or transferred over the wire should
 be serialized first with `tobytes`.
 
 The format for the EC point (elliptic curve point) is four coordinates `[gf(),
 gf(), gf(), gf()]`, where each coordinate `gf() = Float64Array(16)` is a 16
 elements array, where each element has 16 least significant bits used.
 
-The ristretto group gives a way to map ristretto group elemenst to Edwards
+The ristretto group gives a way to map ristretto group elements to Edwards
 points (frombytes) and to convert a certain subset of Edwards points back to
 ristretto group elements (tobytes).
 
@@ -105,7 +105,7 @@ ristretto group elements (tobytes).
 * **unsafe.point_sub**: subtracts two EC points
 * **unsafe.point_add**: adds two EC points
 * **unsafe.point_scalarmult_base**: multiplies the base EC point by a scalar
-* **unsafe.point_scalarmult**: multiplies a given EC point by a scaral
+* **unsafe.point_scalarmult**: multiplies a given EC point by a scalar
 * **unsafe.point_random**: generates a random EC point
 
 
@@ -147,8 +147,7 @@ i9:
 | add                       | 0.41 ms      | scalar_negate             | 0.01 ms      |
 | sub                       | 0.41 ms      | scalar_add                | 0.02 ms      |
 | scalarmult_base           | 3.47 ms      | scalar_sub                | 0.03 ms      |
-| scalarmult                | 3.61 ms      | scalar_sub                | 0.03 ms      |
-|                           |              | scalar_mul                | 0.01 ms      |
+| scalarmult                | 3.61 ms      | scalar_mul                | 0.01 ms      |
 
 | UNSAFE - Edwards EC group |              |
 | ------------------------- |:------------:|
