@@ -2,7 +2,7 @@ Ristretto255.js
 ============
 
 Ristretto255.js is a pure-JS implementation of the
-[Ristretto](https://ristretto.group/) group operations, built on top of the 
+[Ristretto](https://ristretto.group/) group operations, built on top of the
 popular [TweetNaCl.js](https://tweetnacl.js.org/#/) crypto library.
 
 Documentation
@@ -18,23 +18,23 @@ Documentation
 Overview
 --------
 
-This project gives a high-level JavaScript API for operations in the 
-[ristretto255](https://ristretto.group/) prime-order group. The ristretto255 
-group enjoys the speed and safety of Curve25519 while also being prime-order, so 
-that cryptographic protocols using it not need to worry about  cofactor-related 
+This project gives a high-level JavaScript API for operations in the
+[ristretto255](https://ristretto.group/) prime-order group. The ristretto255
+group enjoys the speed and safety of Curve25519 while also being prime-order, so
+that cryptographic protocols using it not need to worry about  cofactor-related
 attacks.
 
 There are multiple useful files in the repository:
 
-* [ristretto.js](./ristretto.js) contains a well documented javascript code 
-  exporting function that provide operations over the prime-order group 
+* [ristretto.js](./ristretto.js) contains a well documented javascript code
+  exporting function that provide operations over the prime-order group
   ristretto255 as well as operations over the scalars for that group,
 
-* [ristretto.min.js](./ristretto.min.js) is a minified variant of `ristretto.js` 
+* [ristretto.min.js](./ristretto.min.js) is a minified variant of `ristretto.js`
   identical to it in functionality, this file is ship-ready,
 
-* [ristretto.benchmarks.html](./ristretto.benchmarks.html) shows an example of 
-  usage for all the exported functions. This file can be opened in the browser 
+* [ristretto.benchmarks.html](./ristretto.benchmarks.html) shows an example of
+  usage for all the exported functions. This file can be opened in the browser
   to run the benchmarks and check for browser compatibility.
 
 Installation
@@ -45,20 +45,20 @@ Installation
 Usage
 -----
 
-The implementation `ristretto.js` exports the following set of arithmetic 
+The implementation `ristretto.js` exports the following set of arithmetic
 operations.
 
 ##### Operations over a prime order group (ristretto255) of order L
 
-The inputs to all the functions should be valid ristretto255 elements (this can 
-be checked with ristretto.is_valid_point() -> 0/1), otherwise the behavior is 
+The inputs to all the functions should be valid ristretto255 elements (this can
+be checked with ristretto.is_valid_point() -> 0/1), otherwise the behavior is
 unpredicted and functions may throw exceptions.
 
-All ristretto255 elements are stored in the serialized format as 32-elements 
+All ristretto255 elements are stored in the serialized format as 32-elements
 byte arrays (of type Uint8Array(32)).
 
 * **is_valid(P)**: return 0 or 1
-* **from_hash(h)**: return P instantiated from Uint8Array(64) such as the output 
+* **from_hash(h)**: return P instantiated from Uint8Array(64) such as the output
   of SHA512
 * **random()**: returns a random element of ristretto255
 * **add(P, Q)**: return P + Q
@@ -69,11 +69,11 @@ byte arrays (of type Uint8Array(32)).
 ##### Operations over scalars - big integers modulo L, where
 `L = 2^252 + 27742317777372353535851937790883648493`.
 
-Each scalar (a big integer mod L) is of type `Float64Array(32)`. Each of the 32 
-elements is at most 8 bits (auxiliary bits are needed to accommodate overflows 
+Each scalar (a big integer mod L) is of type `Float64Array(32)`. Each of the 32
+elements is at most 8 bits (auxiliary bits are needed to accommodate overflows
 during arithmetic operations).
 
-Scalar operations implement simple school-book methods to achieve small 
+Scalar operations implement simple school-book methods to achieve small
 javascript file size.
 
 * **scalar_random()**: returns a randomly generated scalar mod L
@@ -85,17 +85,17 @@ javascript file size.
 
 ##### Unsafe operations over Edwards EC points
 
-Unsafe operations give a way to use the ristretto group more efficiently, but 
-these APIs should be used with great care. To guarantee security of 
-crypto-protocols the EC points stored on disk or transfered over the wire should 
+Unsafe operations give a way to use the ristretto group more efficiently, but
+these APIs should be used with great care. To guarantee security of
+crypto-protocols the EC points stored on disk or transfered over the wire should
 be serialized first with `tobytes`.
 
-The format for the EC point (elliptic curve point) is four coordinates `[gf(), 
-gf(), gf(), gf()]`, where each coordinate `gf() = Float64Array(16)` is a 16 
+The format for the EC point (elliptic curve point) is four coordinates `[gf(),
+gf(), gf(), gf()]`, where each coordinate `gf() = Float64Array(16)` is a 16
 elements array, where each element has 16 least significant bits used.
 
-The ristretto group gives a way to map ristretto group elemenst to Edwards 
-points (frombytes) and to convert a certain subset of Edwards points back to 
+The ristretto group gives a way to map ristretto group elemenst to Edwards
+points (frombytes) and to convert a certain subset of Edwards points back to
 ristretto group elements (tobytes).
 
 * **unsafe.gf**: creates one zero coordinate, `[gf(), gf(), gf(), gf()]` will give an EC point type
@@ -112,10 +112,10 @@ ristretto group elements (tobytes).
 System requirements
 -------------------
 
-We inherit the limitations of [TweetNaCl.js](https://tweetnacl.js.org/#/) and 
-support modern browsers that support the [Window.crypto 
-API](https://developer.mozilla.org/en-US/docs/Web/API/Window/crypto) and can 
-generate cryptographically secure random numbers (which can be checked 
+We inherit the limitations of [TweetNaCl.js](https://tweetnacl.js.org/#/) and
+support modern browsers that support the [Window.crypto
+API](https://developer.mozilla.org/en-US/docs/Web/API/Window/crypto) and can
+generate cryptographically secure random numbers (which can be checked
 [here](https://caniuse.com/#feat=getrandomvalues)).
 
 This code can also be run with Node.js.
@@ -135,13 +135,12 @@ To test, run `yarn test`.
 Benchmarks
 ----------
 
-To run benchmarks in a browser open 
+To run benchmarks in a browser open
 [ristretto.benchmark.html](./ristretto.benchmark.html) in a browser.
-Here are the benchmarks from MacBook Pro (15-inch, 2018) with 2.9 GHz Intel Core 
+Here are the benchmarks from MacBook Pro (15-inch, 2018) with 2.9 GHz Intel Core
 i9:
 
-| `ristretto255 group`        |              | scalar group              |              
-|
+| ristretto255 group        |              | scalar group              |              |
 | ------------------------- |:------------:| ------------------------- |:------------:|
 | random                    | 0.48 ms      | scalar_random             | 0.01 ms      |
 | from_hash                 | 0.53 ms      | scalar_invert             | 2.60 ms      |
@@ -166,8 +165,8 @@ i9:
 Contributors
 ------------
 
-The authors of this code are Valeria Nikolaenko 
-([valerini](https://github.com/valerini)) and Kevin Lewi 
+The authors of this code are Valeria Nikolaenko
+([valerini](https://github.com/valerini)) and Kevin Lewi
 ([kevinlewi](https://github.com/kevinlewi)).
 
 ### License
