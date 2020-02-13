@@ -26,22 +26,21 @@ attacks.
 
 There are multiple useful files in the repository:
 
-* `ristretto.js` contains a well documented javascript code exporting function 
-  that provide operations over the prime-order group ristretto255 as well as 
-  operations over the scalars for that group,
+* [ristretto.js](./ristretto.js) contains a well documented javascript code 
+  exporting function that provide operations over the prime-order group 
+  ristretto255 as well as operations over the scalars for that group,
 
-* `ristretto.min.js` is a minified variant of `ristretto.js` identical to it in 
-  functionality, this file is ship-ready,
+* [ristretto.min.js](./ristretto.min.js) is a minified variant of `ristretto.js` 
+  identical to it in functionality, this file is ship-ready,
 
-* `ristretto.benchmarks.html` shows an example of usage for all the exported 
-  functions, this file from whitin the cloned repo can be opened in the browser 
-  to check the speed and browser compatibility.
+* [ristretto.benchmarks.html](./ristretto.benchmarks.html) shows an example of 
+  usage for all the exported functions. This file can be opened in the browser 
+  to run the benchmarks and check for browser compatibility.
 
 Installation
 ------------
 
-TODO
-
+`yarn add ristretto255`
 
 Usage
 -----
@@ -113,12 +112,13 @@ ristretto group elements (tobytes).
 System requirements
 -------------------
 
-We inherit the limitations of TweetNaCl.js and support modern browsers that 
-support window.crypto API and can generate cryptographically secure random 
-numbers (which can be checked 
+We inherit the limitations of [TweetNaCl.js](https://tweetnacl.js.org/#/) and 
+support modern browsers that support the [Window.crypto 
+API](https://developer.mozilla.org/en-US/docs/Web/API/Window/crypto) and can 
+generate cryptographically secure random numbers (which can be checked 
 [here](https://caniuse.com/#feat=getrandomvalues)).
 
-Our code can also be run with node.js
+This code can also be run with Node.js.
 
 Development and testing
 ------------------------
@@ -135,10 +135,13 @@ To test, run `yarn test`.
 Benchmarks
 ----------
 
-To run benchmarks in a browser open ristretto.benchmark.html in a browser.
-Here are the benchmarks from MacBook Pro (15-inch, 2018) with 2.9 GHz Intel Core i9
+To run benchmarks in a browser open 
+[ristretto.benchmark.html](./ristretto.benchmark.html) in a browser.
+Here are the benchmarks from MacBook Pro (15-inch, 2018) with 2.9 GHz Intel Core 
+i9:
 
-| ristretto255 group        |              | scalar group              |              |
+| `ristretto255 group`        |              | scalar group              |              
+|
 | ------------------------- |:------------:| ------------------------- |:------------:|
 | random                    | 0.48 ms      | scalar_random             | 0.01 ms      |
 | from_hash                 | 0.53 ms      | scalar_invert             | 2.60 ms      |
