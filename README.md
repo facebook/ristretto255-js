@@ -45,26 +45,25 @@ Installation
 Usage
 -----
 
-The implementation `ristretto.js` exports the following set of arithmetic
-operations.
+The file `ristretto.js` exports the following types of arithmetic operations:
 
 ##### Operations over a prime order group (ristretto255) of order L
 
-The inputs to all the functions should be valid ristretto255 elements (this can
-be checked with ristretto.is_valid_point() -> 0/1), otherwise the behavior is
-unpredicted and functions may throw exceptions.
+The inputs to all of the functions below should be valid ristretto255 points (which can
+be checked by calling `ristretto.is_valid_point()`); otherwise, the behavior is
+undefined, and functions may throw exceptions.
 
-All ristretto255 elements are stored in the serialized format as 32-elements
-byte arrays (of type Uint8Array(32)).
+All ristretto255 elements are stored in the serialized format as 32-element
+byte arrays of type `Uint8Array(32)`.
 
-* **is_valid(P)**: return 0 or 1
-* **from_hash(h)**: return P instantiated from Uint8Array(64) such as the output
-  of SHA512
-* **random()**: returns a random element of ristretto255
-* **add(P, Q)**: return P + Q
-* **sub(P, Q)**: return P - Q
-* **scalarmult_base(x)**: return x * BASE
-* **scalarmult(x, P)**: return x * P
+* `is_valid(P)`: return 0 or 1
+* `from_hash(h)`: return P instantiated from a Uint8Array(64) (such as the output
+  of SHA512)
+* `random()`: returns a random point on ristretto255
+* `add(P, Q)`: return P + Q
+* `sub(P, Q)`: return P - Q
+* `scalarmult_base(x)`: return x * BASE
+* `scalarmult(x, P)`: return x * P
 
 ##### Operations over scalars - big integers modulo L, where
 `L = 2^252 + 27742317777372353535851937790883648493`.
@@ -73,30 +72,29 @@ Each scalar (a big integer mod L) is of type `Float64Array(32)`. Each of the 32
 elements is at most 8 bits (auxiliary bits are needed to accommodate overflows
 during arithmetic operations).
 
-Scalar operations implement simple school-book methods to achieve small
-javascript file size.
+Scalar operations implement simple school-book methods to optimize for a minimal
+javascript binary size.
 
-* **scalar_random()**: returns a randomly generated scalar mod L
-* **scalar_add(x, y)**: returns x + y mod L
-* **scalar_sub(x, y)**: returns x - y mod L
-* **scalar_negate(x)**: returns -x mod L
-* **scalar_mul(x, y)**: returns x * y mod L
-* **scalar_invert(x)**: returns 1/x mod L
+* `scalar_random()`: returns a randomly generated scalar mod L
+* `scalar_add(x, y)`: returns x + y mod L
+* `scalar_sub(x, y)`: returns x - y mod L
+* `scalar_negate(x)`: returns -x mod L
+* `scalar_mul(x, y)`: returns x * y mod L
+* `scalar_invert(x)`: returns 1/x mod L
 
 ##### Unsafe operations over Edwards EC points
 
-Unsafe operations give a way to use the ristretto group more efficiently, but
-these APIs should be used with great care. To guarantee security of
-crypto-protocols the EC points stored on disk or transferred over the wire should
-be serialized first with `tobytes`.
+Unsafe operations give a way to use the ristretto255 group more efficiently, but
+these APIs should be used with great care. To minimize security risks of
+cryptographic protocols which use these operations, these EC (elliptic curve) points should
+be serialized first with `tobytes` before being stored on disk or transferred over the wire.
 
-The format for the EC point (elliptic curve point) is four coordinates `[gf(),
-gf(), gf(), gf()]`, where each coordinate `gf() = Float64Array(16)` is a 16
-elements array, where each element has 16 least significant bits used.
+The format for the EC point is four coordinates: `[gf(),
+gf(), gf(), gf()]`, where each coordinate `gf() = Float64Array(16)` is a 16-element array, where each element has 16 least significant bits used.
 
-The ristretto group gives a way to map ristretto group elements to Edwards
-points (frombytes) and to convert a certain subset of Edwards points back to
-ristretto group elements (tobytes).
+The ristretto technique gives a way to map ristretto255 group elements to 
+Edwards points (`frombytes`) and to convert a certain subset of Edwards points 
+back to ristretto255 group elements (`tobytes`).
 
 * **unsafe.gf**: creates one zero coordinate, `[gf(), gf(), gf(), gf()]` will give an EC point type
 * **unsafe.point_from_hash**: generates an EC point from a 64-elements byte array `Uint8Array(64)` such as an output of `SHA512`
