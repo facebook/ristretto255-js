@@ -25,7 +25,7 @@ import nacl from 'tweetnacl';
  * A note on random numbers generations.
  *   For most of the cryptographic protocols it is crucial to have a good source of randomness.
  *   This code uses window.crypto.getRandomValues() to generate cryptographically secure random
- *   numbers as recommended (inheritting this from tweetnacl's nacl.randomBytes),
+ *   numbers as recommended (inheriting this from tweetnacl's nacl.randomBytes),
  *   but it is up to the browser to implement this correctly and securely.
  *   See https://caniuse.com/#feat=getrandomvalues for which browsers support this API.
  *   Among all internet users, it estimated that 95.82% have support for window.crypto.getRandomValues() API.
@@ -109,18 +109,15 @@ const L_sub_2 = new Float64Array([
  * @param {Float64Array(32)} o scalar mod L for result, each element of o will be at most 8 bits.
  */
 function MmodL(o, a, b) {
-    let i,
-	j,
-	t = new Float64Array(64);
-    for (i = 0; i < 64; i++) t[i] = 0;
+	let t = new Float64Array(64);
 
     // Simple "operand scanning" schoolbook multiplication in two nested loops.
     // Elements of the resulting t have the max number of bits represented by this 64-elements vector:
     // [16, 17, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20, 20, 20, 20, 20, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 20, 20, 20, 20, 20, 20, 20, 20, 19, 19, 19, 19, 18, 18, 17, 16, 0]
-    for (i = 0; i < 32; i++) {
-	for (j = 0; j < 32; j++) {
+    for (let i = 0; i < 32; i++) {
+	    for (let j = 0; j < 32; j++) {
             t[i + j] += a[i] * b[j];
-	}
+	    }
     }
 
     // Reduce t mod L and write to o
@@ -148,21 +145,18 @@ function SmodL(o, a) {
  * @param {Float64Array(32)} inv_x scalar reduced mod L for result, each element of inv_x should be at most 8 bits.
  */
 function invmodL(inv_x, x) {
-    let tmp = new Float64Array(32);
-    let i;
-    for (i = 0; i < 32; i++) tmp[i] = x[i];
-    for (i = 251; i >= 0; i--) {
-	// squaring
-	SmodL(tmp, tmp);
-	// parsing the bits of the modulus
-	// i & 0x07 == i % 8
-	// i >> 3 == i / 8 (integer division)
-	if (((L_sub_2[i >> 3] >> (i & 0x07)) & 1) !== 0) {
-            // multiply by x
-            MmodL(tmp, tmp, x);
-	}
+    inv_x = x.slice();
+    for (let i = 251; i >= 0; i--) {
+        // squaring
+        SmodL(inv_x, inv_x);
+        // parsing the bits of the modulus
+        // i & 0x07 == i % 8
+        // i >> 3 == i / 8 (integer division)
+        if (((L_sub_2[i >> 3] >> (i & 0x07)) & 1) !== 0) {
+                // multiply by x
+                MmodL(inv_x, inv_x, x);
+        }
     }
-    for (i = 0; i < 32; i++) inv_x[i] = tmp[i];
 }
 
 /***
@@ -285,8 +279,8 @@ function iszero25519(p) {
     lowlevel.pack25519(s, p);
     // do byte-by-byte comparison
     let res = 1;
-    for (var i = 0; i < 32; i++) {
-	res &= s[i] == 0;
+    for (let i = 0; i < 32; i++) {
+	    res &= s[i] === 0;
     }
     return res;
 }
@@ -502,14 +496,10 @@ function is_canonical(s) {
 
     c = (s[31] & 0x7f) ^ 0x7f;
     for (i = 30; i > 0; i--) {
-	c |= s[i] ^ 0xff;
+	    c |= s[i] ^ 0xff;
     }
-    c =
-	((c | (0 >>> 0)) - 1) >>
-	8; /* c & 1 == 1 iff s = 0x7f 0xff 0xff ... 0xff 0x** */
-    d =
-	(0xed - 1 - (s[0] | (0 >>> 0))) >>
-	8; /* d & 1 == 1   iff   s[0] >= 0xed */
+    c = ((c | (0 >>> 0)) - 1) >> 8; /* c & 1 == 1 iff s = 0x7f 0xff 0xff ... 0xff 0x** */
+    d = (0xed - 1 - (s[0] | (0 >>> 0))) >> 8; /* d & 1 == 1   iff   s[0] >= 0xed */
 
     return 1 - (((c & d) | s[0]) & 1); /* (c & d) & 1 == 1 iff s >= 2^255-19 */
 }
@@ -535,7 +525,7 @@ function frombytes(h, s) {
 	v_u2u2 = lowlevel.gf();
     let was_square;
 
-    if (is_canonical(s) == 0) {
+    if (is_canonical(s) === 0) {
 	return -1;
     }
     lowlevel.unpack25519(s_, s);
@@ -716,7 +706,7 @@ function scalarmult(n, p) {
     let Q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
     let P = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
 
-    if (frombytes(P, p) != 0) {
+    if (frombytes(P, p) !== 0) {
         throw "Invalid argument";
     }
     lowlevel.scalarmult(Q, P, n); // Q = P * n
@@ -731,7 +721,7 @@ function scalarmult(n, p) {
  */
 function is_valid(p) {
     let P = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
-    if (frombytes(P, p) == -1) {
+    if (frombytes(P, p) === -1) {
         return 0;
     }
     return 1;
@@ -748,10 +738,10 @@ function add(p, q) {
     let P = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
     let Q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
 
-    if (frombytes(P, p) == -1) {
+    if (frombytes(P, p) === -1) {
         throw "Invalid argument";
     }
-    if (frombytes(Q, q) == -1) {
+    if (frombytes(Q, q) === -1) {
         throw "Invalid argument";
     }
 
@@ -783,10 +773,10 @@ function sub(p, q) {
     let P = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
     let Q = [lowlevel.gf(), lowlevel.gf(), lowlevel.gf(), lowlevel.gf()];
 
-    if (frombytes(P, p) == -1) {
+    if (frombytes(P, p) === -1) {
         throw "Invalid argument";
     }
-    if (frombytes(Q, q) == -1) {
+    if (frombytes(Q, q) === -1) {
         throw "Invalid argument";
     }
 
@@ -836,8 +826,8 @@ function random() {
  * @param {Float64Array(32)} scalar point will be reduced to range [0, L) and each element will be at most 8 bits
  */
 function reducemodL(r) {
-    let x = new Float64Array(64), i;
-    for (i = 0; i < 32; i++) x[i] = r[i];
+    let x = new Float64Array(64);
+    for (let i = 0; i < 32; i++) x[i] = r[i];
     lowlevel.modL(r, x);
 }
 
@@ -862,14 +852,13 @@ function scalar_random() {
             i--;
             c |= ((r[i] - lowlevel.L[i]) >> 8) & n;
             n &= ((r[i] ^ lowlevel.L[i]) - 1) >> 8;
-        } while (i != 0);
+        } while (i !== 0);
 
-    } while (c == 0);
+    } while (c === 0);
 
     let res = new Float64Array(32);
     // converting from Buffer to the correct type to avoid confusion
-    let i;
-    for (i = 0; i < 32; i++) res[i] = r[i];
+    for (let i = 0; i < 32; i++) res[i] = r[i];
     return res;
 }
 
@@ -893,9 +882,8 @@ function scalar_invert(s) {
  */
 function scalar_negate(s) {
     let neg_s = new Float64Array(32);
-    let i;
     // neg_s := L - s
-    for (i = 0; i < 32; i++) {
+    for (let i = 0; i < 32; i++) {
         neg_s[i] = -s[i];
     }
     reducemodL(neg_s);
@@ -911,8 +899,7 @@ function scalar_negate(s) {
  */
 function scalar_add(x, y) {
     let z = new Float64Array(32);
-    let i;
-    for (i = 0; i < 32; i++) {
+    for (let i = 0; i < 32; i++) {
         z[i] = x[i] + y[i];
     }
     reducemodL(z);
@@ -966,7 +953,7 @@ ristretto.scalar_sub = scalar_sub;
 ristretto.scalar_mul = scalar_mul;
 
 /* These functions are exposed for benchmarking and testing purposes only and should not be used in any production environments */
-ristretto.unsafe = {}
+ristretto.unsafe = {};
 ristretto.unsafe.point_from_hash = point_from_hash;
 ristretto.unsafe.tobytes = tobytes;
 ristretto.unsafe.frombytes = frombytes;
