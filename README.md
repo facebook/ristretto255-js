@@ -16,11 +16,14 @@ popular [TweetNaCl.js](https://tweetnacl.js.org/#/) crypto library.
 Overview
 --------
 
-This project gives a high-level JavaScript API for operations in the
+This project gives a high-level javascript API for operations in the
 [ristretto255](https://ristretto.group/) prime-order group. The ristretto255
 group enjoys the speed and safety of Curve25519 while also being prime-order, so
 that cryptographic protocols built on top of it will be resistant to [cofactor-related
 attacks](https://ristretto.group/why_ristretto.html#pitfalls-of-a-cofactor).
+
+Installation
+--------
 
 To install with the yarn package manager, simply run:
 
@@ -111,7 +114,7 @@ Development and testing
 
 2. cd `ristretto255-js/`
 
-3. To install the necessary dependenices, run `yarn`. (Note: Building this library requires node version >=6.9.0)
+3. To install the necessary dependencies, run `yarn`. (Note: Building this library requires node version >=6.9.0)
 
 4. To build `ristretto255.min.js`, run `yarn build`.
 
@@ -122,7 +125,7 @@ Benchmarks
 ----------
 
 To run the benchmarks in a browser, open
-[ristretto.benchmarks.html](./ristretto.benchmarks.html).
+[ristretto255.benchmarks.html](./ristretto255.benchmarks.html).
 Here are the benchmarks from a MacBook Pro (15-inch, 2018) with 2.9 GHz Intel Core
 i9:
 
@@ -161,8 +164,17 @@ Contributors
 ------------
 
 The authors of this code are Valeria Nikolaenko
-([valerini](https://github.com/valerini)) and Kevin Lewi
-([kevinlewi](https://github.com/kevinlewi)).
+([@valerini](https://github.com/valerini)) and Kevin Lewi
+([@kevinlewi](https://github.com/kevinlewi)).
+
+###### Acknowledgments
+
+Special thanks go to Kostas Chalkias ([@kchalkias](https://github.com/kchalkias)) and
+David Wong ([@mimoo](https://github.com/mimoo))
+for reviewing and giving feedback, Henry de Valence ([@hdevalence](https://github.com/hdevalence)) for
+answering questions about ristretto255, Dmitry Chestnykh ([@dchest](https://github.com/dchest)) for
+extending TweetNaCl.js to support this library, and Kyle Summers
+([@KyleJSummers](https://github.com/KyleJSummers)) for recommending javascript build tooling.
 
 ### License
 This project is [MIT licensed](./LICENSE).

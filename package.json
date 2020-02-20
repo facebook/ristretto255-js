@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "description": "This library supports ristretto255 group operations on top of TweetNacl",
   "main": "dist/ristretto255.min.js",
-  "repository": "git@github.com:calibra/tweetnacl-ristretto-js-private.git",
-  "author": "Lera Nikolaenko <valerini@calibra.com>",
+  "repository":  {
+    "type" : "git",
+    "url" : "https://github.com/calibra/ristretto255-js.git"
+  },
+  "author": "Valeria Nikolaenko <valerini@fb.com>",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.7.7",
