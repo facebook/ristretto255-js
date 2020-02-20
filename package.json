@@ -1,0 +1,41 @@
+{
+  "name": "ristretto255",
+  "version": "0.1.0",
+  "description": "This library supports ristretto255 group operations on top of TweetNacl",
+  "main": "dist/ristretto255.min.js",
+  "repository": "git@github.com:calibra/tweetnacl-ristretto-js-private.git",
+  "author": "Lera Nikolaenko <valerini@calibra.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.7.7",
+    "@babel/plugin-transform-modules-commonjs": "^7.7.5",
+    "@babel/preset-env": "^7.7.7",
+    "@rollup/plugin-commonjs": "^11.0.1",
+    "@rollup/plugin-node-resolve": "^7.0.0",
+    "babel-jest": "^24.9.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-jest": "^23.7.0",
+    "eslint-plugin-node": "^11.0.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "jest": "^24.9.0",
+    "prettier": "^1.19.1",
+    "rollup": "^1.31.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-uglify": "^6.0.4"
+  },
+  "scripts": {
+    "build": "rollup --config config/rollup.config.js",
+    "test": "jest --config config/jest.config.js",
+    "lint": "eslint --config config/eslint.config.js src/ristretto255.js src/ristretto255.test.js ristretto255.benchmark.js config/*.js"
+  },
+  "browserslist": "> 0.25%, not dead",
+  "dependencies": {
+    "tweetnacl": "^1.0.3"
+  }
+}
