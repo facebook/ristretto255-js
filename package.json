@@ -32,7 +32,7 @@
   "scripts": {
     "build": "rollup --config config/rollup.config.js",
     "test": "jest --config config/jest.config.js",
-    "lint": "eslint --config config/eslint.config.js src/ristretto255.js src/ristretto255.test.js ristretto255.benchmark.js config/*.js"
+    "lint": "eslint --config config/eslint.config.js src/ristretto255.js src/ristretto255.test.js ristretto255.benchmarks.js config/*.js"
   },
   "browserslist": "> 0.25%, not dead",
   "dependencies": {
