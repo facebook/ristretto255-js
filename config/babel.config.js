@@ -6,7 +6,7 @@
  */
 
 module.exports = {
-  presets: [['@babel/env', { modules: false }]],
+  presets: [['@babel/preset-env']],
   env: {
     test: {
       plugins: ['@babel/plugin-transform-modules-commonjs']

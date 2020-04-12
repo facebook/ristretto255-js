@@ -48,7 +48,18 @@
  *     for more information on the limitations and browser support for obtaining
  *     these random values.
  */
+
 import nacl from 'tweetnacl';
+
+// polyfill for Uint8Array.slice
+if (!Uint8Array.prototype.slice) {
+  // eslint-disable-next-line
+  Object.defineProperty(Uint8Array.prototype, 'slice', {
+    value(begin, end) {
+      return new Uint8Array(Array.prototype.slice.call(this, begin, end));
+    }
+  });
+}
 
 const ristretto255 = {};
 

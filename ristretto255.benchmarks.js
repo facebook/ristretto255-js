@@ -7,6 +7,11 @@
 
 /* global ristretto255 */
 
+if (!Uint8Array.prototype.fill) {
+  // eslint-disable-next-line
+  Uint8Array.prototype.fill = Array.prototype.fill;
+}
+
 /* Set-up */
 const t00 = performance.now();
 const NUM_OF_REPS = 100;
@@ -22,11 +27,11 @@ for (let i = 0; i < NUM_OF_REPS; i++) {
   ristrettoSerializedPoints.push(
     ristretto255.unsafe.point.toBytes(ristrettoECPoint)
   );
-  hashes.push(
-    new Uint8Array(
-      crypto.subtle.digest('SHA-512', new TextEncoder('utf-8').encode(`${i}`))
-    )
-  );
+  const hTemp = new Uint8Array(32);
+  for (let j = 0; j < 32; j++) {
+    hTemp[j] = i;
+  }
+  hashes.push(hTemp);
   scalars.push(ristretto255.scalar.getRandom());
 }
 

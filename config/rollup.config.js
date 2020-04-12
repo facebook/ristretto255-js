@@ -12,25 +12,45 @@ import commonjs from '@rollup/plugin-commonjs';
 
 const babelconfig = require('./babel.config.js');
 
-export default {
-  input: 'src/ristretto255.js',
-  output: {
-    file: 'dist/ristretto255.min.js',
-    format: 'umd',
-    name: 'ristretto255',
-    globals: {
-      crypto: 'crypto'
-    }
+export default [
+  {
+    input: 'src/ristretto255.js',
+    output: {
+      file: 'dist/ristretto255.min.js',
+      format: 'umd',
+      name: 'ristretto255',
+      globals: {
+        crypto: 'crypto'
+      }
+    },
+    external: ['crypto'],
+    plugins: [
+      babel({
+        exclude: 'node_modules/**',
+        babelrc: false,
+        ...babelconfig
+      }),
+      uglify(),
+      resolve(),
+      commonjs()
+    ]
   },
-  external: ['crypto'],
-  plugins: [
-    babel({
-      exclude: 'node_modules/**',
-      babelrc: false,
-      ...babelconfig
-    }),
-    uglify(),
-    resolve(),
-    commonjs()
-  ]
-};
+  {
+    input: 'ristretto255.benchmarks.js',
+    output: {
+      file: 'ristretto255.benchmarks.min.js',
+      format: 'umd',
+      name: 'ristretto255_benchmarks'
+    },
+    plugins: [
+      babel({
+        exclude: 'node_modules/**',
+        babelrc: false,
+        ...babelconfig
+      }),
+      uglify(),
+      resolve(),
+      commonjs()
+    ]
+  }
+];

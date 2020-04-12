@@ -99,13 +99,13 @@ back to ristretto255 group elements (`toBytes()`).
 
 * `unsafe.point.alloc()`: allocated a placeholder for an EC point
 * `unsafe.point.toBytes(P)`: converts an EC point `P` to a ristretto255 element (the conversion is well defined only for even EC points)
-* `unsafe.point.fromBytes(E)`: converts a ristretto255 element `E` to an EC point
+* `unsafe.point.fromBytes(P, E)`: converts a ristretto255 element `E` to an EC point `P`
 * `unsafe.point.getRandom()`: generates a random EC point
 * `unsafe.point.fromHash(h)`: generates an EC point from `h`, a 64-element byte array `Uint8Array(64)` such as an output of `SHA512`
 * `unsafe.point.add(P, Q)`: adds two EC points `P` and `Q`
 * `unsafe.point.sub(P, Q)`: subtracts two EC points `P` and `Q`
-* `unsafe.point.scalarMultBase(x)`: multiplies the base EC point by a scalar `x`
-* `unsafe.point.scalarMult(P, x)`: multiplies a given EC point `P` by a scalar `x`
+* `unsafe.point.scalarMultBase(Q, x)`: multiplies the base EC point by a scalar `x` and stores the result in `Q`
+* `unsafe.point.scalarMult(Q, P, x)`: multiplies a given EC point `P` by a scalar `x` and stores the result in `Q`
 
 Development and testing
 ------------------------
