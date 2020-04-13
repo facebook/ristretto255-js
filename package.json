@@ -32,6 +32,9 @@
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-uglify": "^6.0.4"
   },
+  "resolutions": {
+    "minimist": "^1.2.5"
+  },
   "scripts": {
     "build": "rollup --config config/rollup.config.js",
     "test": "jest --config config/jest.config.js",
