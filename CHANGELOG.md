@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 (April 10, 2020)
+## 0.1.1 (April 12, 2020)
 
 * Addressing IE11 compatibility issues
 
