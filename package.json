@@ -1,6 +1,6 @@
 {
   "name": "ristretto255",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Supports the ristretto255 group operations on top of TweetNaCl.js",
   "main": "dist/ristretto255.min.js",
   "repository": {
