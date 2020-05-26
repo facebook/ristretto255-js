@@ -86,16 +86,19 @@ javascript binary size.
 ##### Unsafe operations over Edwards EC points
 
 Unsafe operations give a way to use the ristretto255 group more efficiently, but
-these APIs should be used with great care. To minimize security risks of
-cryptographic protocols which use these operations, these EC (elliptic curve) points should
-be serialized first with `toBytes()` before being stored on disk or transferred over the wire.
+these APIs should be used with great care.
+It is recommended in the [ristretto255 RFC](https://tools.ietf.org/html/draft-hdevalence-cfrg-ristretto-01#section-4)
+that an implementation that does a number of group operations
+first transforms ristretto255 elements to EC points (`unsafe.point.fromBytes`), then performs necessary
+operations in the EC group (e.g. `unsafe.point.scalarMult`) and
+transforms the resulting EC point back to ristretto255 group (`unsafe.point.toBytes`).
+However since JavaScript does not provide type safety, it is easier to mix-up different types,
+thus we highly recommend the use of safe operations described in the previous sections instead.
+The implementations must not operate on internal (EC) representations other than in between
+`unsafe.point.fromBytes` and `unsafe.point.toBytes` functions.
 
 The format for the EC point is four coordinates: `[gf(), gf(), gf(), gf()]`, where each coordinate
 `gf() = Float64Array(16)` is a 16-element array, where each element has 16 least significant bits used.
-
-The ristretto technique gives a way to map ristretto255 group elements to
-Edwards points (`fromBytes()`) and to convert a certain subset of Edwards points
-back to ristretto255 group elements (`toBytes()`).
 
 * `unsafe.point.alloc()`: allocated a placeholder for an EC point
 * `unsafe.point.toBytes(P)`: converts an EC point `P` to a ristretto255 element (the conversion is well defined only for even EC points)
