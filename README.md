@@ -1,4 +1,4 @@
-Ristretto255.js
+Ristretto255.js ![Build Status](https://github.com/novifinancial/ristretto255-js/workflows/Yarn%20CI/badge.svg)
 ============
 
 Ristretto255.js is a pure-JS implementation of the
