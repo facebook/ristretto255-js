@@ -1,11 +1,11 @@
 {
   "name": "ristretto255",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Supports the ristretto255 group operations on top of TweetNaCl.js",
   "main": "dist/ristretto255.min.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/calibra/ristretto255-js.git"
+    "url": "https://github.com/novifinancial/ristretto255-js.git"
   },
   "author": "Valeria Nikolaenko <valerini@fb.com>",
   "license": "MIT",

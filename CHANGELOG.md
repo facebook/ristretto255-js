@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 (August 18, 2021)
+
+* Updated dependencies
+
 ## 0.1.1 (April 12, 2020)
 
 * Addressing IE11 compatibility issues
