@@ -9,7 +9,7 @@ import nacl from 'tweetnacl';
 import testDalekScalars from '../data/scalars.data';
 import testDalek from '../data/ristretto.data';
 
-const ristretto255 = require('./ristretto255.js').default;
+const ristretto255 = require('./ristretto255').default;
 
 const { lowlevel } = nacl;
 

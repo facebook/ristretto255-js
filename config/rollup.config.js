@@ -10,7 +10,7 @@ import babel from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 
-const babelconfig = require('./babel.config.js');
+const babelconfig = require('./babel.config');
 
 export default [
   {
