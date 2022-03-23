@@ -5,6 +5,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Since this is a library, ignore yarn.lock
+yarn.lock
+
 # Runtime data
 pids
 *.pid
