@@ -18,12 +18,8 @@ export default [
     output: {
       file: 'dist/ristretto255.min.js',
       format: 'umd',
-      name: 'ristretto255',
-      globals: {
-        crypto: 'crypto'
-      }
+      name: 'ristretto255'
     },
-    external: ['crypto'],
     plugins: [
       babel({
         exclude: 'node_modules/**',
@@ -32,7 +28,9 @@ export default [
         ...babelconfig
       }),
       terser(),
-      resolve(),
+      resolve({
+        browser: true
+      }),
       commonjs()
     ]
   },
