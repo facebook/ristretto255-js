@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 (December 12, 2023)
+
+* Removed extraneous crypto import from rollup config
+
 ## 0.1.2 (August 18, 2021)
 
 * Updated dependencies
